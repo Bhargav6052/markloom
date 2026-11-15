@@ -1,0 +1,3 @@
+import {describe,it,expect} from 'vitest';
+import {storedMotion,effectiveMotion} from './MotionSettings';
+describe('motion comfort preferences',()=>{it('defaults to gentle for absent, invalid or unavailable storage',()=>{expect(storedMotion()).toBe('gentle');expect(storedMotion({getItem:()=> 'bad'})).toBe('gentle');expect(storedMotion({getItem:()=>{throw Error('blocked')}})).toBe('gentle')});it('honors explicit choices and gives system reduced motion priority',()=>{expect(storedMotion({getItem:()=> 'full'})).toBe('full');expect(effectiveMotion('full',true)).toBe('reduced');expect(effectiveMotion('gentle',false)).toBe('gentle')})});

@@ -1,0 +1,13 @@
+import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
+export type MotionMode='gentle'|'full'|'reduced';
+export function effectiveMotion(mode:MotionMode,systemReduced:boolean):MotionMode{return systemReduced?'reduced':mode}
+export function storedMotion(storage?:Pick<Storage,'getItem'>):MotionMode{try{const value=storage?.getItem('markloom_motion');return value==='full'||value==='reduced'?value:'gentle'}catch{return 'gentle'}}
+const Context=createContext<{mode:MotionMode;effective:MotionMode;systemReduced:boolean;setMode:(mode:MotionMode)=>void}>({mode:'gentle',effective:'gentle',systemReduced:false,setMode:()=>{}});
+export function MotionProvider({children}:{children:ReactNode}){const [mode,setMode]=useState<MotionMode>(()=>storedMotion(typeof localStorage==='undefined'?undefined:localStorage));const [systemReduced,setSystemReduced]=useState(()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches);const effective=effectiveMotion(mode,systemReduced);
+ useEffect(()=>{const query=matchMedia('(prefers-reduced-motion: reduce)');const update=()=>setSystemReduced(query.matches);query.addEventListener('change',update);return()=>query.removeEventListener('change',update)},[]);
+ useEffect(()=>{try{localStorage.setItem('markloom_motion',mode);sessionStorage.setItem('inkloom_motion',effective==='reduced'?'paused':'enabled')}catch{/* Preferences stay usable without storage. */}document.documentElement.dataset.motionMode=effective;document.documentElement.dataset.interfaceMotion=effective==='reduced'?'static':'enabled'},[mode,effective]);
+ return <Context.Provider value={{mode,effective,systemReduced,setMode}}>{children}</Context.Provider>}
+export const useMotionSettings=()=>useContext(Context);
+export default function MotionSettings(){const {mode,setMode,systemReduced}=useMotionSettings();return <details className="motion-settings"><summary>Motion settings</summary><div className="motion-menu"><label htmlFor="motion-mode">Animation comfort</label><select id="motion-mode" value={mode} onChange={e=>setMode(e.target.value as MotionMode)}><option value="gentle">Gentle Motion (default)</option><option value="full">Full Motion</option><option value="reduced">Reduced Motion</option></select>{systemReduced&&<p>Your system’s reduced-motion preference is active.</p>}</div></details>}
+
+export function PublicMotionSettings(){return <MotionSettings/>}

@@ -1,0 +1,67 @@
+{
+  "/": {
+    "title": "Markloom \u2014 Ideas move. Truth stays connected.",
+    "description": "A considered space for brand knowledge, creative work and human judgment. Connect approved evidence to the decisions that shape your brand.",
+    "index": true
+  },
+  "/privacy": {
+    "title": "Privacy policy | Markloom",
+    "description": "Learn what Markloom stores, how optional analytics works, and how classification and policy controls govern external AI processing.",
+    "index": true
+  },
+  "/terms": {
+    "title": "Terms and conditions | Markloom",
+    "description": "Read the terms for authorized use of Markloom, including account responsibilities, content ownership and human review requirements.",
+    "index": true
+  },
+  "/contact": {
+    "title": "Contact and support | Markloom",
+    "description": "Find published Markloom support and privacy contacts, or reach your organization administrator and Privacy Center.",
+    "index": true
+  },
+  "/login": {
+    "title": "Sign in | Markloom",
+    "description": "Sign in to your private Markloom brand governance workspace.",
+    "index": false
+  },
+  "/signup": {
+    "title": "Create your workspace | Markloom",
+    "description": "Create a Markloom account to organize approved evidence and review brand content with your team.",
+    "index": false
+  },
+  "/forgot-password": {
+    "title": "Reset your password | Markloom",
+    "description": "Request a secure password reset for your Markloom account.",
+    "index": false
+  },
+  "/reset-password": {
+    "title": "Choose a new password | Markloom",
+    "description": "Securely update your Markloom account password.",
+    "index": false
+  },
+  "/auth/callback": {
+    "title": "Email verification | Markloom",
+    "description": "Complete email verification or request a new confirmation link.",
+    "index": false
+  },
+  "/resend-confirmation": {
+    "title": "Confirm your email | Markloom",
+    "description": "Request a new email confirmation for your Markloom account.",
+    "index": false
+  },
+  "/how-it-works": {
+    "title": "How it works | Markloom",
+    "description": "Follow approved brand knowledge through evidence-led draft verification to a human decision on an exact content version.",
+    "index": true
+  },
+  "/our-principles": {
+    "title": "Our principles | Markloom",
+    "description": "Evidence, transparency, human control, privacy and continuity guide the Markloom brand governance workflow.",
+    "index": true
+  },
+  "/product-tour": {
+    "title": "Product tour | Markloom",
+    "description": "Explore the Source, Draft and Decision workflow with an interactive walkthrough of evidence-led brand governance.",
+    "index": true
+  }
+}

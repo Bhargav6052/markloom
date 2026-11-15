@@ -1,0 +1,34 @@
+/* Background rules deliberately unchanged. Travel, orientation, input and hover
+   each own a nested layer; one timeline drives the three existing objects. */
+.journey-led .pile-card{border:0;background:none;box-shadow:none;opacity:var(--flight-opacity,1);transform:translate3d(var(--flight-x,0px),calc(var(--flight-y,0px) + var(--enter-y,0px)),var(--flight-z,0px)) scale(var(--flight-scale,1));transition:none}
+.card-orientation,.card-pointer,.card-hover{position:absolute;inset:0;display:block;transform-style:preserve-3d;border-radius:inherit}
+.card-orientation{transform:rotateX(var(--flight-rx,0deg)) rotateY(calc(-7deg + var(--flight-ry,0deg))) rotateZ(calc(var(--angle) + var(--flight-rz,0deg)))}
+.card-pointer{transform:translate3d(var(--pointer-x,0px),var(--pointer-y,0px),0) rotateX(var(--pointer-rx,0deg)) rotateY(var(--pointer-ry,0deg))}
+.card-hover{background:linear-gradient(145deg,#302b3e 0%,#15121e 5%,#0c0a11 42%,#17131f);border:1px solid #c9bdff5c;box-shadow:inset 1px 1px 0 #f4ecff20,5px 5px 0 #282131,7px 7px 0 #0d0b12,0 25px 60px #0009;transform:translate3d(0,var(--hover-y),var(--hover-z));transition:transform .3s,border-color .25s,box-shadow .25s}
+.journey-led .pile-card:before{display:none}.journey-led .pile-card:hover,.journey-led .pile-card:focus-visible{box-shadow:none;border:0}
+.pile-card:hover .card-hover,.pile-card:focus-visible .card-hover{border-color:#c9bdffc4;box-shadow:inset 1px 1px 0 #f4ecff40,5px 5px 0 #43364f,7px 7px 0 #100d17,0 28px 65px #000a,0 0 28px #9b8cff15}
+.journey-led .pile-cards{animation:none!important}
+.journey-led .pile-navigation{touch-action:pan-y;outline-offset:-5px}
+.journey-led .pile-chapter{height:175svh;min-height:0;display:block;padding:0 8%;position:relative}
+.scene-copy-frame{position:sticky;top:0;display:flex;align-items:center;height:100svh;min-height:650px;pointer-events:none}
+.scene-copy-frame .chapter-copy{width:38%;pointer-events:auto}
+.journey-led .pile-visual-rail{z-index:4}
+.journey-arrows{position:absolute;left:15%;right:20%;bottom:10%;display:flex;justify-content:center;align-items:center;gap:25px;pointer-events:auto}
+.journey-arrows button{width:44px;height:44px;border-radius:50%;border:1px solid #9e87bb70;background:#140d1dc9;color:#e9dcff;font-size:19px;font-weight:300;padding:0;transition:transform .25s,border-color .25s}
+.journey-arrows button:hover{border-color:#c9bdff;transform:perspective(500px) translateZ(8px)}
+.journey-arrows>span{font:9px ui-monospace,monospace;color:#c9bdd9;letter-spacing:.12em}
+.pile-navigation[data-static="true"]:not([data-scene="hero"]) .pile-card{left:27%;top:12%;--angle:0deg;--base-z:0px;opacity:0;visibility:hidden}
+.pile-navigation[data-static="true"][data-scene="source"] [data-card="source"],.pile-navigation[data-static="true"][data-scene="draft"] [data-card="draft"],.pile-navigation[data-static="true"][data-scene="decision"] [data-card="decision"]{opacity:1;visibility:visible}
+@media(max-width:1150px) and (min-width:761px){.scene-copy-frame .chapter-copy{width:41%}.journey-arrows{bottom:10%;left:10%;right:10%}.journey-led .pile-progress{top:73%}}
+@media(max-width:760px){.journey-led .pile-chapter{height:155svh;min-height:1100px;padding:0 7%}.scene-copy-frame{height:100svh;min-height:850px;padding:430px 0 45px;align-items:flex-start;top:0}.scene-copy-frame .chapter-copy{width:100%;max-width:none}.journey-arrows{bottom:1%;left:auto;right:-3%;gap:8px}.journey-arrows button{width:38px;height:38px}.journey-arrows>span{font-size:8px}.journey-led .pile-progress{bottom:11%;font-size:8px}.journey-led .pile-card-title strong{font-size:18px}.card-hover{box-shadow:inset 1px 1px 0 #f4ecff20,3px 4px 0 #282131,5px 6px 0 #0d0b12,0 20px 40px #0008}.pile-navigation[data-static="true"]:not([data-scene="hero"]) .pile-card{top:5%;left:27%}}
+@media(prefers-reduced-motion:reduce){.card-pointer,.card-hover,.journey-arrows button{transition:none}.card-pointer{transform:none}}
+
+.card-hover{opacity:var(--enter-opacity,1)}
+@media(max-width:760px){.journey-led .pile-chapter{height:185svh;min-height:1480px}.pile-navigation[data-scene="hero"] .pile-progress{bottom:0}.pile-navigation[data-scene="hero"] .journey-arrows{bottom:-12%}}
+
+.pile-card:hover .card-hover,.pile-card:focus-visible .card-hover{--hover-z:20px;--hover-y:-4px}
+.pile-navigation[data-static="true"] .card-hover{transform:none}
+@media(prefers-reduced-motion:reduce){.card-hover{transform:none!important}}
+.journey-led .pile-navigation{display:block;overflow:visible}
+
+.journey-led .public-nav button[aria-current="location"]{color:#f7f6fa;box-shadow:0 1px 0 #b99fe6}

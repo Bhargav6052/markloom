@@ -1,0 +1,36 @@
+# Use with compose.yaml. DNS and ports 80/443 must point to this host.
+services:
+  web:
+    build:
+      args:
+        VITE_SITE_URL: https://${SITE_DOMAIN:?Set the production domain without a scheme}
+        REQUIRE_PUBLIC_SITE: "true"
+  api:
+    environment:
+      PUBLIC_SITE_URL: https://${SITE_DOMAIN:?Set the production domain without a scheme}
+      CORS_ORIGINS: '["https://${SITE_DOMAIN}"]'
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+  caddy:
+    image: caddy:2.10-alpine
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set the production domain without a scheme}
+      ACME_EMAIL: ${ACME_EMAIL:?Set the certificate contact email}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:

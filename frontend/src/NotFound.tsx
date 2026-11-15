@@ -1,0 +1,3 @@
+import PurposeVisual from './PurposeVisual';
+import {Link} from 'react-router-dom';
+export default function NotFound(){return <main id="main-content" tabIndex={-1} className="not-found"><Link className="wordmark" to="/">markloom<span className="brand-mark" aria-hidden="true"/></Link><p className="kicker">404 / NOTHING AT THIS ADDRESS</p><PurposeVisual kind="source"/><h1>A loose thread.<br/><em>Let’s reconnect it.</em></h1><p>The page may have moved, or the address may be incomplete.</p><Link className="button" to="/">Return to Markloom</Link><div className="actions"><Link to="/login">Sign in</Link><Link to="/privacy">Privacy policy</Link></div></main>}

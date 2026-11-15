@@ -1,0 +1,9 @@
+# Cinematic illustration provenance
+
+`frontend/public/connected-evidence.webp` is original artwork generated with the built-in ImageGen tool on 15 November 2026, then resized/compressed using Pillow for web delivery (1535 × 864, 34,480 bytes). Original retained at `/Users/karanamubhargavsai/.codex/generated_images/01a1dc00-9318-7572-8a4c-f8dd471db715/exec-c7d85c91-efc1-40fd-93c9-e35e55f1f36a.png`.
+
+Final generation prompt:
+
+> Use case: stylized-concept. Create a single premium editorial 3D illustration for the Inkloom brand governance website, wide landscape 16:9 composition. A continuous slender luminous violet filament connects three suspended translucent smoked-glass sheets and one brushed chrome circular seal over a deep near-black reflective surface. The sheets represent approved knowledge flowing into human decisions. Precise architectural product photography, sophisticated restrained material realism, fine violet edge illumination, studio chiaroscuro, subtle surface grain, realistic contact reflections, atmospheric almost black space. Strong object detail in the middle/right half, generous black negative space on the left for a real HTML heading outside the image. Use the same subtle palette as a dark purple premium cinematic software brand: black #070609, muted violet #9270bf, chrome and lilac. No lettering, numbers, diagrams, labels, logos, people, icons, watermarks, UI, or borders. Original conceptual art, do not copy any existing brand or website.
+
+`evidence-source.webp`, `evidence-draft.webp`, and `evidence-decision.webp` are compressed browser renders of our own procedural Three.js scene. No models, logos, photos or other visual assets were copied from TANDEM or from the supplied PDF/video. The PDF's packaging scenario is presented only as an explicitly labeled illustrative product tour; it is not company data or an actual live AI result.

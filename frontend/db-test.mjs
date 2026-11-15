@@ -1,0 +1,73 @@
+// Real PostgreSQL WASM; Supabase auth and storage schemas below are test-only stand-ins.
+import {PGlite} from '@electric-sql/pglite';
+import {readFile,readdir} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+alter default privileges in schema public grant execute on functions to anon,authenticated;
+create schema auth; create schema storage; create schema extensions;
+create table auth.users(id uuid primary key,email text);
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
+grant usage on schema auth,storage to authenticated,service_role;
+grant execute on all functions in schema auth to authenticated,service_role;
+create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
+alter table storage.objects enable row level security;grant select on storage.objects to authenticated;`);
+for(const name of (await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')).sort())await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+await db.exec('set role anon');await assert.rejects(()=>db.query("select public.inkloom_governance(null,'create_org','{}'::jsonb)"),/permission denied/);await db.exec('reset role');
+console.log('PASS schema applies to PostgreSQL and anonymous RPC denied');
+const ids=['00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000004'];
+const [admin,creator,manager,outsider]=ids;
+const emails=['admin@demo.test','creator@demo.test','manager@demo.test','other@demo.test'];
+for(let i=0;i<4;i++)await db.query('insert into auth.users values($1,$2)',[ids[i],emails[i]]);
+async function asUser(id){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,email:emails[ids.indexOf(id)]})]);await db.exec('set role authenticated')}
+async function cmd(org,action,data){return (await db.query('select public.inkloom_governance($1,$2,$3::jsonb) result',[org,action,JSON.stringify(data)])).rows[0].result}
+async function table(name){return (await db.query(`select * from public.inkloom_${name}`)).rows}
+await asUser(admin);const org=(await cmd(null,'create_org',{name:'DEMO ONLY — Governance tests'})).id;
+for(const [id,role]of [[creator,'creator'],[manager,'manager']]){const invite=(await cmd(org,'invite',{email:emails[ids.indexOf(id)],role})).id;await asUser(id);await cmd(null,'accept_invite',{id:invite});await asUser(admin)}
+console.log('PASS onboarding and role invitations');
+await assert.rejects(()=>cmd(org,'set_role',{user_id:admin,role:'creator'}),/cannot change your own role/);
+await asUser(creator);await assert.rejects(()=>cmd(org,'save_source',{name:'forged',kind:'fact',body:'lie'}),/admin role/);
+await assert.rejects(()=>db.query('insert into public.inkloom_organizations(name,created_by) values($1,$2)',['forged',creator]),/permission denied/);
+await asUser(outsider);assert.equal((await table('organizations')).length,0);await assert.rejects(()=>cmd(org,'create_content',{title:'cross tenant',body:'no'}),/workspace membership/);
+console.log('PASS role escalation, direct write and cross-tenant denial');
+await asUser(admin);const fact=await cmd(org,'save_source',{name:'DEMO price',kind:'fact',rule_type:'fact',body:'Demo product price is ₹1,999'});await cmd(org,'activate_source',{id:fact.id});
+await asUser(creator);const ad=await cmd(org,'create_content',{title:'DEMO linked ad',body:'Demo product price is ₹1,999',channel:'Social'});const unrelated=await cmd(org,'create_content',{title:'DEMO unrelated ad',body:'Welcome to our store',channel:'Social'});
+async function analyze(version,actor,factVersion,price){await db.exec('reset role');await db.exec('set role service_role');const run=(await db.query('select public.inkloom_begin_analysis($1,$2,$3,$4,$5) r',[org,actor,version,'test-fixture','not-live-ai'])).rows[0].r;await db.query('select public.inkloom_finish_analysis($1,$2,$3,$4,$5::jsonb)',[org,actor,run.id,'complete',JSON.stringify({issues:[],dependencies:[{quote:price,fact_version_id:factVersion,evidence_quote:price}]})]);return run}
+await analyze(ad.version_id,creator,fact.id,'Demo product price is ₹1,999');await asUser(creator);const request=(await cmd(org,'submit',{version_id:ad.version_id})).id;
+await assert.rejects(()=>cmd(org,'decide',{id:request,decision:'approved',reason:'forged'}),/independent authorized/);
+await asUser(manager);await cmd(org,'comment',{version_id:ad.version_id,body:'DEMO human review'});await cmd(org,'decide',{id:request,decision:'approved',reason:'DEMO independent human judgment'});const passport=(await table('passports'))[0];assert.equal(passport.content_version_id,ad.version_id);
+console.log('PASS analysis, independent human decision and revision-bound passport');
+await asUser(admin);const next=await cmd(org,'save_source',{source_id:fact.source_id,body:'Demo product price is ₹2,499',rule_type:'fact'});const preview=await cmd(org,'impact_preview',{id:next.id});assert.equal(preview.length,1);assert.equal(preview[0].id,ad.id);await cmd(org,'activate_source',{id:next.id});await cmd(org,'activate_source',{id:next.id});assert.equal((await table('impacts')).length,1);const items=await table('content');assert.equal(items.find(c=>c.id===ad.id).status,'needs_review');assert.equal(items.find(c=>c.id===unrelated.id).status,'draft');assert.equal((await table('passports'))[0].sha256,passport.sha256);await asUser(manager);assert.ok((await table('notifications')).length);
+console.log('PASS exact price-change targeting, impact preview, idempotency and history');
+await asUser(creator);const revised=await cmd(org,'revise_content',{id:ad.id,expected_version_id:ad.version_id,body:'Demo product price is ₹2,499',creator_intent:'DEMO update'});await assert.rejects(()=>cmd(org,'revise_content',{id:ad.id,expected_version_id:ad.version_id,body:'stale'}),/content was revised/);await analyze(revised.version_id,creator,next.id,'Demo product price is ₹2,499');await asUser(creator);const second=(await cmd(org,'submit',{version_id:revised.version_id})).id;await asUser(manager);await cmd(org,'decide',{id:second,decision:'approved',reason:'DEMO new price checked'});assert.equal((await table('passports')).length,2);assert.equal((await table('impacts'))[0].status,'resolved');
+console.log('PASS optimistic revision conflict, re-review and impact resolution');
+await asUser(outsider);for(const t of ['dependencies','passports','audit_log','content'])assert.equal((await table(t)).length,0);
+await assert.rejects(()=>db.query('select public.inkloom_begin_analysis($1,$2,$3,$4,$5)',[org,creator,revised.version_id,'forged','forged']),/permission denied/);
+console.log('PASS historical isolation and browser analysis forgery denial');
+await asUser(creator);await assert.rejects(()=>db.query('select public.inkloom_set_ai_policy($1,$2,true,true)',[org,creator]),/permission denied/);
+await db.exec('reset role');await db.exec('set role service_role');
+await assert.rejects(()=>db.query('select public.inkloom_set_ai_policy($1,$2,true,true)',[org,creator]),/admin role/);
+await db.query('select public.inkloom_set_ai_policy($1,$2,true,false)',[org,admin]);
+await assert.rejects(()=>db.query('select public.inkloom_authorize_ai_transfer($1,$2,$3,$4,$5,$6::jsonb)',[org,creator,revised.version_id,'test-fixture','never-live',JSON.stringify(['CONFIDENTIAL'])]),/classification blocked/);
+await assert.rejects(()=>db.query('select public.inkloom_authorize_ai_transfer($1,$2,$3,$4,$5,$6::jsonb)',[org,creator,revised.version_id,'test-fixture','never-live',JSON.stringify(['RESTRICTED'])]),/classification blocked/);
+await assert.rejects(()=>db.query('select public.inkloom_authorize_ai_transfer($1,$2,$3,$4,$5,$6::jsonb)',[org,creator,revised.version_id,'test-fixture','never-live',JSON.stringify(['INTERNAL'])]),/classification blocked/);
+await db.query('select public.inkloom_authorize_ai_transfer($1,$2,$3,$4,$5,$6::jsonb)',[org,creator,revised.version_id,'test-fixture','never-live',JSON.stringify(['PUBLIC'])]);
+assert.equal((await table('processing_events')).length,1);
+console.log('PASS privacy admin policy, fail-closed data classes and real attempt record');
+const key='10000000-0000-4000-8000-000000000001';
+const enqueue=async(k)=> (await db.query('select public.inkloom_enqueue_analysis($1,$2,$3,$4,false) result',[org,creator,revised.version_id,k])).rows[0].result;
+const job=await enqueue(key);assert.equal((await enqueue(key)).id,job.id);
+const claim=(await db.query('select public.inkloom_claim_analysis_job() result')).rows[0].result;assert.equal(claim.id,job.id);assert.equal(claim.attempts,1);
+assert.equal((await db.query('select public.inkloom_claim_analysis_job() result')).rows[0].result,null);
+assert.equal((await db.query('select public.inkloom_finish_analysis_job($1,$2,$3::jsonb) result',[job.id,key,'{}'])).rows[0].result,false);
+await db.query("update public.inkloom_analysis_jobs set lease_until=now()-interval '1 second' where id=$1",[job.id]);
+const retry=(await db.query('select public.inkloom_claim_analysis_job() result')).rows[0].result;assert.equal(retry.attempts,2);assert.notEqual(retry.lease_token,claim.lease_token);
+assert.equal((await db.query('select public.inkloom_finish_analysis_job($1,$2,$3::jsonb) result',[job.id,claim.lease_token,'{}'])).rows[0].result,false);
+assert.equal((await db.query('select public.inkloom_finish_analysis_job($1,$2,$3::jsonb) result',[job.id,retry.lease_token,'{}'])).rows[0].result,true);
+await asUser(outsider);for(const t of ['ai_policies','processing_events','privacy_requests','analysis_jobs'])assert.equal((await table(t)).length,0);
+await assert.rejects(()=>table('website_events'),/permission denied/);
+console.log('PASS durable job idempotency, exclusive claim, lease recovery, stale-worker denial and isolation');
+console.log('PASS website analytics table denies browser access');
+await db.close();

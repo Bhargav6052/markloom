@@ -1,0 +1,32 @@
+services:
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?Set the project URL}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:?Set the public browser key}
+        VITE_API_URL: ""
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      ENVIRONMENT: production
+    expose:
+      - "8000"
+    restart: unless-stopped
+  worker:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      ENVIRONMENT: production
+    command: ["python", "-m", "app.worker"]
+    healthcheck:
+      disable: true
+    init: true
+    restart: unless-stopped

@@ -1,0 +1,4 @@
+export const apiBase=import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
+if(import.meta.env.PROD && apiBase && !apiBase.startsWith('https://') && !(typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)))throw new Error('Production API connections require HTTPS or a same-origin path.');
+export type PublicConfig={analytics_available:boolean;turnstile_site_key:string|null;bot_protection_required:boolean;deployment_environment?:'development'|'production';operator_name:string|null;privacy_email:string|null;support_email:string|null;legal_notices_approved:boolean};
+export async function publicConfig():Promise<PublicConfig>{const response=await fetch(apiBase+'/api/public/config',{signal:AbortSignal.timeout(5000),credentials:'omit'});if(!response.ok)throw new Error('Public service configuration is unavailable');return response.json();}

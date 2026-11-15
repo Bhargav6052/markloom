@@ -1,0 +1,20 @@
+{
+  "scope": "Small hand-authored regression set for exact rules only. Not an LLM, semantic accuracy, fairness, legal compliance or production quality benchmark.",
+  "cases": [
+    {"id":"term-hit","text":"Our BEST product","rule_type":"forbidden_term","config":{"term":"best","replacement":"helpful"},"body":"Use helpful instead of best.","warnings":["terminology"],"dependencies":0},
+    {"id":"term-boundary","text":"We bestow attention on each detail.","rule_type":"forbidden_term","config":{"term":"best"},"body":"Do not use best.","warnings":[],"dependencies":0},
+    {"id":"term-case","text":"A Helpful product","rule_type":"forbidden_term","config":{"term":"best"},"body":"Do not use best.","warnings":[],"dependencies":0},
+    {"id":"disclaimer-missing","text":"A seasonal offer.","rule_type":"required_disclaimer","config":{"text":"Terms apply."},"body":"Terms apply.","warnings":["disclaimer"],"dependencies":0},
+    {"id":"disclaimer-present","text":"Seasonal offer. TERMS APPLY.","rule_type":"required_disclaimer","config":{"text":"Terms apply."},"body":"Terms apply.","warnings":[],"dependencies":0},
+    {"id":"fact-mismatch","text":"Demo product price is ₹2,499","rule_type":"fact","config":{"subject":"Demo product price","value":"₹1,999"},"body":"Demo product price is ₹1,999","warnings":["fact"],"dependencies":1},
+    {"id":"fact-match","text":"Demo product price is ₹1,999","rule_type":"fact","config":{"subject":"Demo product price","value":"₹1,999"},"body":"Demo product price is ₹1,999","warnings":[],"dependencies":1},
+    {"id":"fact-format","text":"Demo product price: ₹ 1999","rule_type":"fact","config":{"subject":"Demo product price","value":"₹1,999"},"body":"Demo product price is ₹1,999","warnings":[],"dependencies":1},
+    {"id":"unlinked-content","text":"A new creative direction.","rule_type":"fact","config":{"subject":"Demo product price","value":"₹1,999"},"body":"Demo product price is ₹1,999","warnings":[],"dependencies":0},
+    {"id":"dimensions-mismatch","text":"","rule_type":"dimensions","config":{"width":1080,"height":1080},"body":"Square assets must be 1080 by 1080 pixels.","metadata":{"width":800,"height":600,"alt_text":"Product on a desk"},"warnings":["visual"],"dependencies":0},
+    {"id":"dimensions-match","text":"","rule_type":"dimensions","config":{"width":1080,"height":1080},"body":"Square assets must be 1080 by 1080 pixels.","metadata":{"width":1080,"height":1080,"alt_text":"Product on a desk"},"warnings":[],"dependencies":0},
+    {"id":"contrast-fail","text":"","rule_type":"contrast","config":{"minimum":4.5},"body":"Declared text pairs require 4.5 to 1 contrast.","metadata":{"foreground":"#aaaaaa","background":"#ffffff"},"warnings":["accessibility"],"dependencies":0},
+    {"id":"contrast-pass","text":"","rule_type":"contrast","config":{"minimum":4.5},"body":"Declared text pairs require 4.5 to 1 contrast.","metadata":{"foreground":"#000000","background":"#ffffff"},"warnings":[],"dependencies":0},
+    {"id":"palette-outside","text":"","rule_type":"palette","config":{"colors":["#000000"],"tolerance":45},"body":"Use the approved black palette.","metadata":{"dominant_colors":["#ffffff"]},"warnings":["visual"],"dependencies":0},
+    {"id":"palette-within","text":"","rule_type":"palette","config":{"colors":["#000000"],"tolerance":45},"body":"Use the approved black palette.","metadata":{"dominant_colors":["#101010"]},"warnings":[],"dependencies":0}
+  ]
+}

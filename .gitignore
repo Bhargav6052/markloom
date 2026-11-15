@@ -1,0 +1,31 @@
+.env
+.env.*
+!.env.example
+.env.local
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+dist/
+playwright-report/
+test-results/
+.cache/
+.tools/
+*.pyc
+.DS_Store
+
+.pnpm-store/
+
+# Supplied video frames are private design references, not website assets.
+design-reference/
+
+# Submission archives and local build/reference artifacts.
+/submission/
+/tmp/
+/output/
+*.tsbuildinfo
+.ruff_cache/
+*.log
+
+# Local workspace evidence contains account details, not application assets.
+docs/screenshots/**/workspace-*.jpg
