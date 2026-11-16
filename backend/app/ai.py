@@ -28,6 +28,79 @@ GEMINI_MAX_ATTEMPTS = 3
 GEMINI_RETRY_STATUSES = frozenset({502, 503, 504})
 
 
+# Gemini's responseJsonSchema supports only a subset of JSON Schema.
+# Keep the provider-facing schema simple. Pydantic enforces stricter limits,
+# UUID validation, and extra-field rejection after the model responds.
+_GEMINI_ISSUE_PROPERTIES = {
+    "category": {
+        "type": "string",
+        "enum": [
+            "tone", "terminology", "claim", "messaging",
+            "visual", "accessibility", "disclaimer", "fact",
+        ],
+    },
+    "severity": {"type": "string", "enum": ["info", "warning", "critical"]},
+    "quote": {"type": "string"},
+    "explanation": {"type": "string"},
+    "source_id": {"type": ["string", "null"]},
+    "evidence_quote": {"type": "string"},
+    "evidence_status": {
+        "type": "string",
+        "enum": [
+            "SUPPORTED", "CONTRADICTED",
+            "INSUFFICIENT_EVIDENCE", "NOT_APPLICABLE",
+        ],
+    },
+    "correction": {"type": "string"},
+}
+_GEMINI_DEPENDENCY_PROPERTIES = {
+    "quote": {"type": "string"},
+    "fact_version_id": {"type": "string"},
+    "evidence_quote": {"type": "string"},
+}
+GEMINI_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "issues": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": _GEMINI_ISSUE_PROPERTIES,
+                "required": list(_GEMINI_ISSUE_PROPERTIES),
+            },
+        },
+        "dependencies": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": _GEMINI_DEPENDENCY_PROPERTIES,
+                "required": list(_GEMINI_DEPENDENCY_PROPERTIES),
+            },
+        },
+    },
+    "required": ["issues", "dependencies"],
+}
+
+
+def _safe_gemini_error_category(response: httpx.Response) -> str:
+    """Log only a fixed diagnostic category, never provider messages or user text."""
+    try:
+        message = str(response.json().get("error", {}).get("message", "")).lower()
+    except (TypeError, ValueError, AttributeError):
+        return "unknown"
+    if "schema" in message or "json" in message or "generationconfig" in message:
+        return "structured_output_or_format"
+    if "billing" in message or "payment" in message or "credit" in message:
+        return "billing_or_account"
+    if "api key" in message or "api_key" in message or "permission" in message:
+        return "authentication_or_permission"
+    if "model" in message:
+        return "model_request"
+    if "token" in message or "limit" in message or "size" in message:
+        return "request_size_or_limits"
+    return "other_invalid_request"
+
+
 async def _gemini_request(
     client: httpx.AsyncClient, url: str, key: str, payload: dict
 ) -> httpx.Response:
@@ -120,7 +193,7 @@ async def provider_analysis(text: str, sources: list[dict]) -> AnalysisOutput:
                         "contents": [{"role": "user", "parts": [{"text": payload}]}],
                         "generationConfig": {
                             "responseMimeType": "application/json",
-                            "responseJsonSchema": schema,
+                            "responseJsonSchema": GEMINI_JSON_SCHEMA,
                         },
                     },
                 )
@@ -134,7 +207,16 @@ async def provider_analysis(text: str, sources: list[dict]) -> AnalysisOutput:
     except httpx.HTTPStatusError as exc:
         status_code = exc.response.status_code
         # Never log provider response bodies, request text, or API credentials.
-        log.warning("AI provider HTTP failure (provider=%s, status=%d)", cfg.ai_provider, status_code)
+        if cfg.ai_provider == "gemini" and status_code == 400:
+            log.warning(
+                "Gemini API rejected request (HTTP 400, category=%s)",
+                _safe_gemini_error_category(exc.response),
+            )
+        else:
+            log.warning(
+                "AI provider HTTP failure (provider=%s, status=%d)",
+                cfg.ai_provider, status_code,
+            )
         if cfg.ai_provider == "gemini" and status_code in GEMINI_RETRY_STATUSES:
             raise ProviderUnavailable(
                 f"Gemini temporarily unavailable (HTTP {status_code}) after "
