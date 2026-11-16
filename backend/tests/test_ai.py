@@ -88,3 +88,92 @@ async def test_missing_provider_is_blocked(monkeypatch):
     monkeypatch.setattr(settings(), "ai_model", "")
     with pytest.raises(ProviderUnavailable, match="not configured"):
         await provider_analysis("content", [])
+
+
+class GeminiClient:
+    """In-memory HTTP stub; no real Google requests are sent."""
+
+    def __init__(self, outcomes):
+        self.outcomes = iter(outcomes)
+        self.attempts = 0
+
+    async def post(self, url, *, headers, json):
+        import httpx
+
+        self.attempts += 1
+        result = next(self.outcomes)
+        if isinstance(result, Exception):
+            raise result
+        return httpx.Response(
+            status_code=result,
+            request=httpx.Request("POST", url),
+            json={"candidates": []},
+        )
+
+
+async def test_gemini_retries_503_then_succeeds(monkeypatch):
+    from app import ai
+
+    delays = []
+
+    async def fast_sleep(seconds):
+        delays.append(seconds)
+
+    monkeypatch.setattr(ai.asyncio, "sleep", fast_sleep)
+    client = GeminiClient([503, 503, 200])
+    result = await ai._gemini_request(
+        client, "https://generativelanguage.googleapis.com/test", "test-key", {}
+    )
+    assert result.status_code == 200
+    assert client.attempts == 3
+    assert delays == [2, 4]
+
+
+async def test_gemini_exhausts_retries_and_raises(monkeypatch):
+    import httpx
+    from app import ai
+
+    delays = []
+
+    async def fast_sleep(seconds):
+        delays.append(seconds)
+
+    monkeypatch.setattr(ai.asyncio, "sleep", fast_sleep)
+    client = GeminiClient([503, 503, 503])
+    with pytest.raises(httpx.HTTPStatusError) as err:
+        await ai._gemini_request(client, "https://example.test/gemini", "key", {})
+    assert err.value.response.status_code == 503
+    assert client.attempts == 3
+    assert delays == [2, 4]
+
+
+async def test_gemini_does_not_retry_bad_request(monkeypatch):
+    import httpx
+    from app import ai
+
+    async def no_sleep(_):
+        raise AssertionError("Bad requests must not be retried")
+
+    monkeypatch.setattr(ai.asyncio, "sleep", no_sleep)
+    client = GeminiClient([400])
+    with pytest.raises(httpx.HTTPStatusError) as err:
+        await ai._gemini_request(client, "https://example.test/gemini", "key", {})
+    assert err.value.response.status_code == 400
+    assert client.attempts == 1
+
+
+async def test_gemini_retries_transient_timeout(monkeypatch):
+    import httpx
+    from app import ai
+
+    delays = []
+
+    async def fast_sleep(seconds):
+        delays.append(seconds)
+
+    monkeypatch.setattr(ai.asyncio, "sleep", fast_sleep)
+    client = GeminiClient([httpx.ConnectTimeout("temporary timeout"), 200])
+    result = await ai._gemini_request(client, "https://example.test/gemini", "key", {})
+    assert result.status_code == 200
+    assert client.attempts == 2
+    assert delays == [2]
