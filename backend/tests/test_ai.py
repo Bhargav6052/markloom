@@ -177,3 +177,43 @@ async def test_gemini_retries_transient_timeout(monkeypatch):
     assert result.status_code == 200
     assert client.attempts == 2
     assert delays == [2]
+
+
+def test_gemini_schema_uses_supported_json_subset():
+    from app.ai import GEMINI_JSON_SCHEMA
+
+    def visit(schema):
+        assert "$ref" not in schema
+        assert "$defs" not in schema
+        assert "format" not in schema
+        assert "additionalProperties" not in schema
+        assert "minLength" not in schema
+        assert "maxLength" not in schema
+        for value in schema.values():
+            if isinstance(value, dict):
+                visit(value)
+            elif isinstance(value, list):
+                for child in value:
+                    if isinstance(child, dict):
+                        visit(child)
+
+    visit(GEMINI_JSON_SCHEMA)
+    assert set(GEMINI_JSON_SCHEMA["required"]) == {"issues", "dependencies"}
+
+
+def test_gemini_error_categorization_is_fixed_and_safe():
+    import httpx
+    from app.ai import _safe_gemini_error_category
+
+    response = httpx.Response(
+        status_code=400,
+        request=httpx.Request("POST", "https://example.test"),
+        json={"error": {"message": "Unsupported schema field near PRIVATE_TEST_SECRET"}},
+    )
+    assert _safe_gemini_error_category(response) == "structured_output_or_format"
+    response2 = httpx.Response(
+        status_code=400,
+        request=httpx.Request("POST", "https://example.test"),
+        text="Not JSON: private data",
+    )
+    assert _safe_gemini_error_category(response2) == "unknown"
