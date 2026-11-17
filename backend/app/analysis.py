@@ -15,6 +15,7 @@ from .ai import (
 )
 from .checks import retrieve, deterministic
 from .privacy import preflight
+from .visual import advanced_findings
 
 router = APIRouter(prefix="/api/orgs/{org_id}")
 
@@ -57,6 +58,8 @@ async def process_analysis(job: dict, repo: Repository) -> dict:
             raise InvalidEvidence("Content revision no longer available")
         version = versions[0]
         metadata = version["metadata"].copy()
+        image_doc = None
+        approved_docs = []
         if version.get("document_id"):
             docs = await repo.rows(
                 "documents", id=f"eq.{version['document_id']}", org_id=f"eq.{org}"
@@ -64,6 +67,8 @@ async def process_analysis(job: dict, repo: Repository) -> dict:
             if docs:
                 metadata = {**docs[0]["metadata"], **metadata}
                 if "width" in metadata:
+                    if docs[0].get("mime") in ("image/png", "image/jpeg"):
+                        image_doc = docs[0]
                     assets = await repo.rows(
                         "assets", org_id=f"eq.{org}", approved="eq.true"
                     )
@@ -123,8 +128,15 @@ async def process_analysis(job: dict, repo: Repository) -> dict:
                 f"/rest/v1/analysis_runs?id=eq.{run['id']}&org_id=eq.{org}",
                 json={"provider": cfg.ai_provider, "model": cfg.ai_model},
             )
+        visual_issues = []
+        if image_doc:
+            coverage += " Local image advisory checks attempted; see findings for coverage and limitations."
+            visual_issues = await advanced_findings(
+                repo, org, image_doc, approved_docs, run["source_snapshot"]
+            )
+        remaining = max(0, 100 - len(semantic.issues) - len(exact_issues))
         output = AnalysisOutput(
-            issues=semantic.issues + exact_issues,
+            issues=semantic.issues + exact_issues + visual_issues[:remaining],
             dependencies=semantic.dependencies + exact_deps,
         )
         validate_evidence(output, version["body"], run["source_snapshot"])
