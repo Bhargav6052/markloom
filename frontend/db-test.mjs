@@ -97,4 +97,79 @@ for(const member of [admin,creator,manager]){
 }
 await asUser(outsider);assert.equal((await db.query('select name from storage.objects')).rows.length,0);
 console.log('PASS private storage member access, unregistered object denial and tenant isolation');
+{
+// Dependency regressions: synthetic fixtures live only in this in-memory DB.
+await asUser(admin);
+const dependencyFact=await cmd(org,'save_source',{name:'TEST ONLY — stage count',kind:'fact',rule_type:'fact',body:'The platform has four stages.'});
+await cmd(org,'activate_source',{id:dependencyFact.id});
+await assert.rejects(()=>cmd(org,'save_source',{name:'TEST ONLY — rewritten numeric config',kind:'fact',rule_type:'fact',body:'The platform has four stages.',config:{subject:'The platform has',value:'4'}}),/exact fact subject and value must occur/);
+await cmd(org,'save_source',{name:'TEST ONLY — literal numeric config',kind:'fact',rule_type:'fact',body:'The platform has four stages.',config:{subject:'The platform has',value:'four'}});
+console.log('PASS numeric configuration must preserve the exact approved body spelling');
+const tone=await cmd(org,'save_source',{name:'TEST ONLY — tone',kind:'rule',rule_type:'tone',body:'Use a calm voice.'});
+await cmd(org,'activate_source',{id:tone.id});
+const unselected=await cmd(org,'save_source',{name:'TEST ONLY — unapproved',kind:'fact',rule_type:'fact',body:'The platform has four stages.'});
+await asUser(outsider);
+const foreignOrg=(await cmd(null,'create_org',{name:'TEST ONLY — isolated foreign tenant'})).id;
+const foreignFact=await cmd(foreignOrg,'save_source',{name:'TEST ONLY — foreign fact',kind:'fact',rule_type:'fact',body:'The platform has four stages.'});
+await cmd(foreignOrg,'activate_source',{id:foreignFact.id});
+await asUser(creator);
+const dependencyContent=await cmd(org,'create_content',{title:'TEST ONLY — dependency validation',body:'The platform has 4 stages.',channel:'Test'});
+await db.exec('reset role');await db.exec('set role service_role');
+const parentFact=(await db.query('select source_id from public.inkloom_source_versions where id=$1',[dependencyFact.id])).rows[0].source_id;
+const dependency={quote:'The platform has 4 stages.',fact_version_id:dependencyFact.id,evidence_quote:'The platform has four stages.'};
+const validIssue={category:'fact',severity:'info',quote:dependency.quote,explanation:'TEST ONLY',source_id:dependencyFact.id,evidence_quote:dependency.evidence_quote,evidence_status:'SUPPORTED',correction:''};
+async function dependencyRun(version=dependencyContent.version_id){return (await db.query('select public.inkloom_begin_analysis($1,$2,$3,$4,$5) r',[org,creator,version,'test-fixture','not-live-ai'])).rows[0].r}
+async function finishDependency(run,output,status='complete'){return db.query('select public.inkloom_finish_analysis($1,$2,$3,$4,$5::jsonb)',[org,creator,run.id,status,JSON.stringify(output)])}
+const invalidDependencies=[
+ ['parent source ID',{fact_version_id:parentFact}],
+ ['unknown version',{fact_version_id:'ffffffff-ffff-4fff-8fff-ffffffffffff'}],
+ ['cross-organization version',{fact_version_id:foreignFact.id}],
+ ['unapproved version absent from snapshot',{fact_version_id:unselected.id}],
+ ['non-fact version',{fact_version_id:tone.id,evidence_quote:'Use a calm voice.'}],
+ ['normalized content quotation',{quote:'The platform has four stages.'}],
+ ['normalized evidence quotation',{evidence_quote:'The platform has 4 stages.'}],
+ ['fabricated quotation',{evidence_quote:'Invented evidence'}],
+ ['paraphrased quotation',{quote:'The platform offers 4 stages.'}],
+ ['case-changed quotation',{quote:'the platform has 4 stages.'}],
+ ['whitespace-changed quotation',{quote:'The platform has  4 stages.'}],
+ ['empty content quotation',{quote:''}],
+ ['empty evidence quotation',{evidence_quote:''}],
+];
+for(const [label,changes]of invalidDependencies){
+ const run=await dependencyRun();
+ await assert.rejects(()=>finishDependency(run,{issues:[validIssue],dependencies:[{...dependency,...changes}]}),/invalid: dependency citation/,label);
+ assert.equal((await db.query('select status from public.inkloom_analysis_runs where id=$1',[run.id])).rows[0].status,'running');
+ assert.equal((await db.query('select count(*)::int n from public.inkloom_dependencies where run_id=$1',[run.id])).rows[0].n,0,label);
+ assert.equal((await db.query('select count(*)::int n from public.inkloom_issues where run_id=$1',[run.id])).rows[0].n,0,label);
+ assert.equal((await db.query('select status from public.inkloom_content where id=$1',[dependencyContent.id])).rows[0].status,'draft');
+ await finishDependency(run,{},'error');
+}
+console.log(`PASS ${invalidDependencies.length} SQL dependency rejection cases; atomic rollback preserves draft and inserts no findings or dependencies`);
+const validRun=await dependencyRun();
+await finishDependency(validRun,{issues:[],dependencies:[dependency]});
+const stored=(await db.query('select quote,evidence_quote from public.inkloom_dependencies where run_id=$1',[validRun.id])).rows;
+assert.deepEqual(stored,[{quote:dependency.quote,evidence_quote:dependency.evidence_quote}]);
+assert.equal((await db.query('select status from public.inkloom_content where id=$1',[dependencyContent.id])).rows[0].status,'analyzed');
+assert.equal((await db.query('select count(*)::int n from public.inkloom_decisions d join public.inkloom_review_requests r on r.id=d.request_id where r.content_version_id=$1',[dependencyContent.version_id])).rows[0].n,0);
+assert.equal((await db.query('select count(*)::int n from public.inkloom_passports where content_version_id=$1',[dependencyContent.version_id])).rows[0].n,0);
+console.log('PASS literal 4/four quotes persist unchanged; analysis does not approve or publish content');
+const evidenceRace=await dependencyRun();
+await asUser(admin);
+const changedFact=await cmd(org,'save_source',{source_id:parentFact,rule_type:'fact',body:'The platform has five stages.'});
+await cmd(org,'activate_source',{id:changedFact.id});
+await db.exec('reset role');await db.exec('set role service_role');
+await assert.rejects(()=>finishDependency(evidenceRace,{issues:[],dependencies:[dependency]}),/content or evidence changed/);
+await finishDependency(evidenceRace,{},'error');
+const retiredFactRun=await dependencyRun();
+await assert.rejects(()=>finishDependency(retiredFactRun,{issues:[],dependencies:[dependency]}),/invalid: dependency citation/);
+await finishDependency(retiredFactRun,{},'error');
+console.log('PASS retired fact versions outside the new snapshot cannot be cited');
+const contentRace=await dependencyRun();
+await asUser(creator);
+await cmd(org,'revise_content',{id:dependencyContent.id,expected_version_id:dependencyContent.version_id,body:'A revised test draft.',creator_intent:'TEST ONLY'});
+await db.exec('reset role');await db.exec('set role service_role');
+await assert.rejects(()=>finishDependency(contentRace,{issues:[],dependencies:[]}),/content or evidence changed/);
+await finishDependency(contentRace,{},'error');
+console.log('PASS evidence and content changes during analysis still block completion');
+}
 await db.close();
