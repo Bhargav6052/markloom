@@ -3,7 +3,8 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFile,readdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const db=new PGlite();
-await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+const assetDedupeMigration='20261117200004_inkloom_prevent_duplicate_assets.sql';
+const bootstrap=`create role anon; create role authenticated; create role service_role bypassrls;
 alter default privileges in schema public grant execute on functions to anon,authenticated;
 create schema auth; create schema storage; create schema extensions;
 create table auth.users(id uuid primary key,email text);
@@ -13,8 +14,9 @@ grant usage on schema auth,storage to authenticated,service_role;
 grant execute on all functions in schema auth to authenticated,service_role;
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
-alter table storage.objects enable row level security;grant select on storage.objects to authenticated;`);
-for(const name of (await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')).sort())await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+alter table storage.objects enable row level security;grant select on storage.objects to authenticated;`;
+await db.exec(bootstrap);
+for(const name of (await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')&&n!==assetDedupeMigration).sort())await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
 await db.exec('set role anon');await assert.rejects(()=>db.query("select public.inkloom_governance(null,'create_org','{}'::jsonb)"),/permission denied/);await db.exec('reset role');
 console.log('PASS schema applies to PostgreSQL and anonymous RPC denied');
 const ids=['00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000004'];
@@ -172,4 +174,101 @@ await assert.rejects(()=>finishDependency(contentRace,{issues:[],dependencies:[]
 await finishDependency(contentRace,{},'error');
 console.log('PASS evidence and content changes during analysis still block completion');
 }
+{
+// Upgrade regression: create historical duplicates through the old RPC, then
+// apply the pending migration only to this disposable in-memory PostgreSQL DB.
+await db.exec('reset role');await db.exec('set role service_role');
+let uploadNumber=0;
+const digest='b'.repeat(64);
+async function registerAsset(workspace=org,actor=admin,hash=digest,purpose='asset',extra={}){
+ const data={purpose,name:'TEST ONLY — asset.jpeg',object_path:workspace+'/'+actor+'/test-'+(++uploadNumber)+'.jpeg',mime:'image/jpeg',sha256:hash,text:'',provenance:[],metadata:{width:120,height:80,dominant_colors:['#fe0000'],classification:'CONFIDENTIAL'},...extra};
+ return (await db.query('select public.inkloom_finalize_upload($1,$2,$3::jsonb) result',[workspace,actor,JSON.stringify(data)])).rows[0].result;
+}
+const legacyOne=await registerAsset();
+const legacyTwo=await registerAsset();
+assert.notEqual(legacyOne.id,legacyTwo.id);
+const legacyAsset=(await db.query('select id from public.inkloom_assets where document_id=$1',[legacyOne.id])).rows[0];
+await asUser(admin);await cmd(org,'approve_asset',{id:legacyAsset.id});
+await cmd(org,'set_role',{user_id:manager,role:'admin'});
+await db.exec('reset role');
+const beforeSecurity=(await db.query("select proacl::text,prosecdef,proconfig from pg_proc where oid='public.inkloom_finalize_upload(uuid,uuid,jsonb)'::regprocedure")).rows;
+const beforePolicies=(await db.query('select * from pg_policies order by schemaname,tablename,policyname')).rows;
+await db.exec(await readFile(new URL('../supabase/migrations/'+assetDedupeMigration,import.meta.url),'utf8'));
+assert.deepEqual((await db.query("select proacl::text,prosecdef,proconfig from pg_proc where oid='public.inkloom_finalize_upload(uuid,uuid,jsonb)'::regprocedure")).rows,beforeSecurity);
+assert.deepEqual((await db.query('select * from pg_policies order by schemaname,tablename,policyname')).rows,beforePolicies);
+await db.exec('set role service_role');
+const priorAssets=(await db.query('select * from public.inkloom_assets where org_id=$1 order by id',[org])).rows;
+const priorDocs=(await db.query('select * from public.inkloom_documents where org_id=$1 order by id',[org])).rows;
+const priorAudit=(await db.query('select * from public.inkloom_audit_log where org_id=$1 order by id',[org])).rows;
+await assert.rejects(()=>registerAsset(org,manager,digest,'asset',{name:'renamed.jpg',metadata:{classification:'PUBLIC'}}),/conflict: an identical asset is already registered in this workspace/);
+assert.deepEqual((await db.query('select * from public.inkloom_assets where org_id=$1 order by id',[org])).rows,priorAssets);
+assert.deepEqual((await db.query('select * from public.inkloom_documents where org_id=$1 order by id',[org])).rows,priorDocs);
+assert.deepEqual((await db.query('select * from public.inkloom_audit_log where org_id=$1 order by id',[org])).rows,priorAudit);
+assert.equal((await db.query('select count(*)::int n from public.inkloom_assets a join public.inkloom_documents d on d.id=a.document_id where a.org_id=$1 and d.sha256=$2',[org,digest])).rows[0].n,2);
+assert.equal((await db.query('select approved from public.inkloom_assets where id=$1',[legacyAsset.id])).rows[0].approved,true);
+console.log('PASS migration tolerates historical duplicates and preserves all documents, approvals and audit records');
+const newDigest='c'.repeat(64);
+const first=await registerAsset(org,admin,newDigest);
+await assert.rejects(()=>registerAsset(org,admin,newDigest),/identical asset/);
+assert.equal((await db.query('select approved from public.inkloom_assets where document_id=$1',[first.id])).rows[0].approved,false);
+await assert.rejects(()=>registerAsset(org,creator,digest),/denied: upload role/);
+await assert.rejects(()=>registerAsset(org,creator,'d'.repeat(64)),/denied: upload role/);
+await assert.rejects(()=>registerAsset(org,outsider,digest),/denied: upload role/);
+await assert.rejects(()=>registerAsset(org,admin,digest,'asset',{object_path:'wrong/path/file.jpg'}),/denied: object path/);
+console.log('PASS approved and unapproved duplicates blocked, renamed files blocked, permission/path checks precede hash lookup');
+await asUser(outsider);
+const otherWorkspace=(await cmd(null,'create_org',{name:'TEST ONLY — same binary independent workspace'})).id;
+await db.exec('reset role');await db.exec('set role service_role');
+const independent=await registerAsset(otherWorkspace,outsider,digest);
+assert.notEqual(independent.id,legacyOne.id);
+assert.equal((await db.query('select approved from public.inkloom_assets where document_id=$1',[independent.id])).rows[0].approved,false);
+await assert.rejects(()=>registerAsset(otherWorkspace,outsider,digest),/identical asset/);
+const contentCopy=await registerAsset(org,creator,digest,'content');
+const knowledgeCopy=await registerAsset(org,admin,digest,'knowledge');
+assert.notEqual(contentCopy.id,legacyOne.id);assert.notEqual(knowledgeCopy.id,legacyOne.id);
+const nonassetHash='e'.repeat(64);
+await registerAsset(org,creator,nonassetHash,'content');
+const newAsset=await registerAsset(org,admin,nonassetHash,'asset');assert.ok(newAsset.id);
+console.log('PASS same bytes allowed independently across workspaces, no inherited approval, content/knowledge behavior preserved');
+await db.exec('begin isolation level repeatable read');
+await assert.rejects(()=>registerAsset(org,admin,'9'.repeat(64)),/requires read committed isolation/);
+await db.exec('rollback');
+const simultaneousHash='f'.repeat(64);
+const attempts=await Promise.allSettled([registerAsset(org,admin,simultaneousHash),registerAsset(org,manager,simultaneousHash)]);
+assert.equal(attempts.filter(r=>r.status==='fulfilled').length,1);
+assert.equal(attempts.filter(r=>r.status==='rejected').length,1);
+assert.equal((await db.query('select count(*)::int n from public.inkloom_assets a join public.inkloom_documents d on d.id=a.document_id where a.org_id=$1 and d.sha256=$2',[org,simultaneousHash])).rows[0].n,1);
+const definition=(await db.query("select pg_get_functiondef('public.inkloom_finalize_upload(uuid,uuid,jsonb)'::regprocedure) definition")).rows[0].definition;
+assert.match(definition,/inkloom_organizations where id=p_org for update/);
+assert.equal((await db.query("select prosecdef from pg_proc where oid='public.inkloom_finalize_upload(uuid,uuid,jsonb)'::regprocedure")).rows[0].prosecdef,false);
+await asUser(admin);
+await assert.rejects(()=>db.query('select public.inkloom_finalize_upload($1,$2,$3::jsonb)',[org,admin,'{}']),/permission denied/);
+await asUser(outsider);
+const visibleAssets=await table('assets');
+assert.ok(visibleAssets.some(a=>a.document_id===independent.id));
+assert.ok(!visibleAssets.some(a=>a.document_id===legacyOne.id));
+await db.exec('reset role');await db.exec('set role anon');
+await assert.rejects(()=>db.query('select public.inkloom_finalize_upload($1,$2,$3::jsonb)',[org,admin,'{}']),/permission denied/);
+console.log('PASS paired registrations create one asset, organization lock present, invoker/grants/RLS isolation preserved');
+}
 await db.close();
+// Fresh install: apply every migration in order to a second empty database.
+{
+const fresh=new PGlite();
+try{
+ await fresh.exec(bootstrap);
+ for(const name of (await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')).sort())await fresh.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+ await fresh.query('insert into auth.users values($1,$2)',[admin,'fresh@example.test']);
+ const freshOrg=(await fresh.query('insert into public.inkloom_organizations(name,created_by) values($1,$2) returning id',['TEST ONLY — fresh install',admin])).rows[0].id;
+ await fresh.query('insert into public.inkloom_memberships(org_id,user_id,role) values($1,$2,$3)',[freshOrg,admin,'admin']);
+ await fresh.exec('set role service_role');
+ const payload={purpose:'asset',name:'fresh.jpeg',object_path:freshOrg+'/'+admin+'/fresh.jpeg',mime:'image/jpeg',sha256:'a'.repeat(64),text:'',provenance:[],metadata:{classification:'CONFIDENTIAL'}};
+ const finalize=()=>fresh.query('select public.inkloom_finalize_upload($1,$2,$3::jsonb) result',[freshOrg,admin,JSON.stringify(payload)]);
+ const first=(await finalize()).rows[0].result;
+ assert.deepEqual(Object.keys(first),['id']);
+ await assert.rejects(finalize,/identical asset/);
+ assert.equal((await fresh.query('select count(*)::int n from public.inkloom_assets')).rows[0].n,1);
+ assert.equal((await fresh.query('select approved from public.inkloom_assets')).rows[0].approved,false);
+ console.log('PASS complete fresh installation and duplicate guard on an empty database');
+}finally{await fresh.close()}
+}
