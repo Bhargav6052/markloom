@@ -86,4 +86,15 @@ await asUser(outsider);for(const t of ['ai_policies','processing_events','privac
 await assert.rejects(()=>table('website_events'),/permission denied/);
 console.log('PASS durable job idempotency, exclusive claim, lease recovery, stale-worker denial and isolation');
 console.log('PASS website analytics table denies browser access');
+await db.exec('reset role');
+const storagePath=org+'/'+creator+'/test.pdf';
+await db.query("insert into public.inkloom_documents(org_id,name,object_path,mime,sha256,extracted_text,created_by) values($1,'test.pdf',$2,'application/pdf',$3,'test',$4)",[org,storagePath,'a'.repeat(64),creator]);
+await db.query("insert into storage.objects(bucket_id,name) values('inkloom-private',$1),('inkloom-private','unregistered.pdf'),('other-bucket',$1)",[storagePath]);
+for(const member of [admin,creator,manager]){
+ await asUser(member);
+ const visible=(await db.query("select bucket_id,name from storage.objects")).rows;
+ assert.deepEqual(visible,[{bucket_id:'inkloom-private',name:storagePath}]);
+}
+await asUser(outsider);assert.equal((await db.query('select name from storage.objects')).rows.length,0);
+console.log('PASS private storage member access, unregistered object denial and tenant isolation');
 await db.close();
