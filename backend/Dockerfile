@@ -5,6 +5,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \\
+    && rm -rf /var/lib/apt/lists/*
 RUN useradd --create-home --uid 10001 inkloom
 WORKDIR /app
 COPY --from=build /app/.venv /app/.venv
