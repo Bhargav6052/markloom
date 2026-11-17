@@ -121,23 +121,22 @@ def test_source_in_snapshot_but_not_selection_is_rejected():
         )
 
 
-def test_schema_only_allows_selected_fact_versions():
+def test_schema_keeps_previous_compatible_shape_for_all_source_selections():
     sources = [FACT, {**FACT, "id": OTHER_ID, "rule_type": "tone"}]
     original = deepcopy(sources)
-    schema = ai.gemini_schema(sources)
-    deps = schema["properties"]["dependencies"]
-    assert deps["items"]["properties"]["fact_version_id"]["enum"] == [FACT_ID]
-    assert set(deps["items"]["required"]) == {
-        "quote",
-        "fact_version_id",
-        "evidence_quote",
-    }
-    assert "$defs" not in schema
-    assert "additionalProperties" not in json.dumps(schema)
+    baseline = deepcopy(ai.GEMINI_JSON_SCHEMA)
+    for selection in (sources, [], sources[1:], [FACT]):
+        schema = ai.gemini_schema(selection)
+        assert schema == baseline
+        deps = schema["properties"]["dependencies"]
+        assert "maxItems" not in deps
+        assert "enum" not in deps["items"]["properties"]["fact_version_id"]
+        assert set(deps["items"]["required"]) == {
+            "quote",
+            "fact_version_id",
+            "evidence_quote",
+        }
     assert sources == original
-    for empty in ([], sources[1:]):
-        assert ai.gemini_schema(empty)["properties"]["dependencies"]["maxItems"] == 0
-    assert ai.gemini_schema([FACT])["properties"]["dependencies"].get("maxItems") == 200
 
 
 @pytest.fixture
@@ -445,12 +444,7 @@ async def test_no_fact_context_requires_empty_dependencies(provider):
     output = await ai.provider_analysis(TEXT, [])
     assert output.dependencies == []
     request = json.loads(calls[0].content)
-    assert (
-        request["generationConfig"]["responseJsonSchema"]["properties"]["dependencies"][
-            "maxItems"
-        ]
-        == 0
-    )
+    assert request["generationConfig"]["responseJsonSchema"] == ai.GEMINI_JSON_SCHEMA
 
 
 async def test_openai_adapter_is_not_changed_by_gemini_regeneration(monkeypatch):
@@ -511,20 +505,70 @@ async def test_spent_transport_budget_rejects_invalid_dependency_without_more_re
     assert len(calls) == ai.GEMINI_MAX_ATTEMPTS == 3
 
 
-def test_dynamic_schema_retains_remote_compatible_schema_and_is_request_local():
+def test_compatible_schema_is_request_local():
     baseline = deepcopy(ai.GEMINI_JSON_SCHEMA)
-    dynamic = ai.gemini_schema([FACT])
-    dynamic["properties"]["dependencies"].pop("maxItems")
-    dynamic["properties"]["dependencies"]["items"]["properties"]["fact_version_id"].pop(
-        "enum"
-    )
-    assert dynamic == baseline
+    request_schema = ai.gemini_schema([FACT])
+    request_schema["properties"]["dependencies"]["maxItems"] = 0
+    request_schema["properties"]["dependencies"]["items"]["properties"][
+        "fact_version_id"
+    ]["enum"] = [OTHER_ID]
     assert ai.GEMINI_JSON_SCHEMA == baseline
-    assert ai.gemini_schema([])["properties"]["dependencies"]["maxItems"] == 0
-    assert ai.gemini_schema([FACT])["properties"]["dependencies"]["maxItems"] == 200
+    assert ai.gemini_schema([]) == baseline
+    assert ai.gemini_schema([FACT]) == baseline
 
 
 def test_remote_correction_safety_instructions_remain_present():
     assert "[[DELETE]]" in ai.SYSTEM
     assert "exact replacement passage ready for publication" in ai.SYSTEM
     assert "Never introduce unsupported facts" in ai.SYSTEM
+
+
+async def test_compatible_request_omits_regressed_grammar_constraints(provider):
+    # This is an offline compatibility sentinel, not a claim about live Gemini.
+    # Reject the exact schema additions from PR #9 before serving a valid fixture.
+    calls = provider([result()])
+    original_request = ai._gemini_request
+
+    async def compatible_request(client, url, key, payload, **kwargs):
+        schema = payload["generationConfig"]["responseJsonSchema"]
+        deps = schema["properties"]["dependencies"]
+        assert "maxItems" not in deps
+        assert "enum" not in deps["items"]["properties"]["fact_version_id"]
+        assert schema == ai.GEMINI_JSON_SCHEMA
+        return await original_request(client, url, key, payload, **kwargs)
+
+    from unittest.mock import patch
+
+    with patch.object(ai, "_gemini_request", compatible_request):
+        output = await ai.provider_analysis(TEXT, [FACT])
+    assert len(calls) == 1
+    assert len(output.dependencies) == 1
+
+
+async def test_no_fact_context_still_rejects_dependency_and_exhausts_one_regeneration(
+    provider,
+):
+    calls = provider([result()])
+    with pytest.raises(ai.InvalidFactDependency) as failure:
+        await ai.provider_analysis(TEXT, [])
+    assert failure.value.reason == ai.DependencyReason.UNKNOWN_VERSION
+    assert len(calls) == 2
+
+
+def test_dependency_count_limit_remains_in_pydantic():
+    output = result()
+    output["dependencies"] *= 201
+    with pytest.raises(ValidationError):
+        AnalysisOutput.model_validate(output)
+
+
+def test_preserved_provider_classification_enums():
+    schema = ai.gemini_schema([FACT])
+    issue = schema["properties"]["issues"]["items"]["properties"]
+    assert issue["severity"]["enum"] == ["info", "warning", "critical"]
+    assert issue["evidence_status"]["enum"] == [
+        "SUPPORTED",
+        "CONTRADICTED",
+        "INSUFFICIENT_EVIDENCE",
+        "NOT_APPLICABLE",
+    ]

@@ -181,14 +181,14 @@ DEPENDENCY_INSTRUCTIONS = """For every dependency, fact_version_id MUST equal th
 
 
 def gemini_schema(sources: list[dict]) -> dict:
-    """Extend the existing compatible provider schema without mutating it."""
-    result = deepcopy(GEMINI_JSON_SCHEMA)
-    dependencies = result["properties"]["dependencies"]
-    fact_ids = sorted({str(s["id"]) for s in sources if s["rule_type"] == "fact"})
-    dependencies["maxItems"] = 200 if fact_ids else 0
-    if fact_ids:
-        dependencies["items"]["properties"]["fact_version_id"]["enum"] = fact_ids
-    return result
+    """Keep the proven provider schema independent of the selected evidence.
+
+    Dynamic UUID enums and array bounds can exceed Gemini's constrained-output
+    grammar limits. Selection, fact type, exact quotations and the 200-dependency
+    limit remain enforced by Python; SQL independently verifies persisted links.
+    Return a copy so one request cannot mutate another request's schema.
+    """
+    return deepcopy(GEMINI_JSON_SCHEMA)
 
 
 async def provider_analysis(text: str, sources: list[dict]) -> AnalysisOutput:
