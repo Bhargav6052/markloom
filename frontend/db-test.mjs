@@ -44,7 +44,7 @@ console.log('PASS exact price-change targeting, impact preview, idempotency and 
 await asUser(creator);const revised=await cmd(org,'revise_content',{id:ad.id,expected_version_id:ad.version_id,body:'Demo product price is ₹2,499',creator_intent:'DEMO update'});await assert.rejects(()=>cmd(org,'revise_content',{id:ad.id,expected_version_id:ad.version_id,body:'stale'}),/content was revised/);await analyze(revised.version_id,creator,next.id,'Demo product price is ₹2,499');await asUser(creator);const second=(await cmd(org,'submit',{version_id:revised.version_id})).id;await asUser(manager);await cmd(org,'decide',{id:second,decision:'approved',reason:'DEMO new price checked'});assert.equal((await table('passports')).length,2);assert.equal((await table('impacts'))[0].status,'resolved');
 console.log('PASS optimistic revision conflict, re-review and impact resolution');
 await asUser(admin);
-const tone=await cmd(org,'save_source',{name:'DEMO tone',kind:'tone',rule_type:'tone',body:'Use clear professional language'});
+const tone=await cmd(org,'save_source',{name:'DEMO tone',kind:'rule',rule_type:'tone',body:'Use clear professional language'});
 await cmd(org,'activate_source',{id:tone.id});
 await analyze(revised.version_id,creator,next.id,'Demo product price is ₹2,499');
 await asUser(creator);const policyRequest=(await cmd(org,'submit',{version_id:revised.version_id})).id;
