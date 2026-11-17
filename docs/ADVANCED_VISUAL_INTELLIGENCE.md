@@ -18,7 +18,7 @@ No new database schema, permission, or approval change.
   a WCAG conformance measurement. Unreadable text may escape OCR.
 - Engine absence, inaccessible files and comparison limits yield manual-review notices.
 - Existing findings retain priority under the 100-issue cap. No original objects changed.
-- Synthetic test fixtures are not production data. The real-engine test skips if
-  Tesseract is absent. No production migration or external service is required.
+- Synthetic test fixtures are not production data. CI installs Tesseract and English data so the real-engine regression runs;
+  the test skips in other environments where the engine is absent. No production migration or external service is required.
 
 Review CI and staging results before merge.

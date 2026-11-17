@@ -6,6 +6,7 @@ import hashlib
 import io
 import os
 import re
+import shutil
 import subprocess
 from pathlib import PurePosixPath
 from urllib.parse import quote
@@ -28,6 +29,9 @@ async def original_image(repo, org, doc):
         doc.get("org_id") != org
         or len(parts) != 3
         or parts[0] != org
+        or path != "/".join(parts)
+        or not all(re.fullmatch(r"[0-9a-fA-F-]{36}", p) for p in parts[:2])
+        or not re.fullmatch(r"[0-9a-fA-F-]{36}\\.(?:png|jpg|jpeg)", parts[2])
         or any(p in (".", "..") for p in parts)
         or doc.get("mime") not in ("image/png", "image/jpeg")
     ):
@@ -130,14 +134,17 @@ def parse_ocr(tsv, width, height):
 def local_ocr(image):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
+    executable = shutil.which("tesseract")
+    if not executable:
+        raise RuntimeError("Local OCR engine unavailable")
     result = subprocess.run(
-        ["tesseract", "stdin", "stdout", "-l", "eng", "--psm", "11", "tsv"],
+        [executable, "stdin", "stdout", "-l", "eng", "--psm", "11", "tsv"],
         input=buffer.getvalue(),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         timeout=12,
         check=True,
-        env={**os.environ, "OMP_THREAD_LIMIT": "1"},
+        env={"PATH": os.environ.get("PATH", os.defpath), "LANG": "C.UTF-8", "OMP_THREAD_LIMIT": "1"},
     )
     if len(result.stdout) > 512_000:
         raise ValueError("OCR output limit")
@@ -186,7 +193,7 @@ def ocr_findings(image, lines, sources):
     )
     findings.append(advisory(
         "visual", f"Local OCR, English, working image {image.width}×{image.height}; "
-        f"coordinates are left/top/right/bottom after orientation and scaling. "
+        "coordinates are left/top/right/bottom after orientation and scaling. "
         f"Unverified image-derived text: {details[:3400]}. Review manually.",
     ))
     if len(reliable) < len(lines):

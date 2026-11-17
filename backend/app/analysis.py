@@ -67,7 +67,8 @@ async def process_analysis(job: dict, repo: Repository) -> dict:
             if docs:
                 metadata = {**docs[0]["metadata"], **metadata}
                 if "width" in metadata:
-                    image_doc = docs[0]
+                    if docs[0].get("mime") in ("image/png", "image/jpeg"):
+                        image_doc = docs[0]
                     assets = await repo.rows(
                         "assets", org_id=f"eq.{org}", approved="eq.true"
                     )
@@ -129,6 +130,7 @@ async def process_analysis(job: dict, repo: Repository) -> dict:
             )
         visual_issues = []
         if image_doc:
+            coverage += " Local image advisory checks attempted; see findings for coverage and limitations."
             visual_issues = await advanced_findings(
                 repo, org, image_doc, approved_docs, run["source_snapshot"]
             )

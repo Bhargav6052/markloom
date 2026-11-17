@@ -1,12 +1,15 @@
+import hashlib
 import io
 import shutil
 from uuid import uuid4
 
+import httpx
 import pytest
 from PIL import Image, ImageDraw, ImageFont
 
 from app.visual import (
-    contrast_estimate, local_ocr, ocr_findings, parse_ocr, similarity, working_image,
+    advanced_findings, contrast_estimate, local_ocr, ocr_findings,
+    original_image, parse_ocr, similarity, working_image,
 )
 
 
@@ -67,3 +70,86 @@ def test_contrast_estimate_low_and_high():
 @pytest.mark.skipif(not shutil.which("tesseract"), reason="local OCR engine not installed")
 def test_real_local_ocr():
     assert any("MARKLOOM" in line["text"].upper() for line in local_ocr(fixture()))
+
+
+@pytest.mark.asyncio
+async def test_private_image_rejects_cross_workspace_and_bad_paths():
+    org = str(uuid4())
+    doc = {"org_id": str(uuid4()), "object_path": f"{org}/{uuid4()}/{uuid4()}.png",
+           "mime": "image/png"}
+    with pytest.raises(ValueError, match="Invalid image reference"):
+        await original_image(None, org, doc)
+    doc["org_id"] = org
+    doc["object_path"] = f"{org}/{uuid4()}/../outside.png"
+    with pytest.raises(ValueError, match="Invalid image reference"):
+        await original_image(None, org, doc)
+
+
+@pytest.mark.asyncio
+async def test_authenticated_storage_hash_and_limits(monkeypatch):
+    from app import visual
+    org = str(uuid4())
+    raw = encode(fixture(), "PNG")
+    path = f"{org}/{uuid4()}/{uuid4()}.png"
+    headers = {"apikey": "test-only"}
+    doc = {"org_id": org, "object_path": path, "mime": "image/png",
+           "sha256": hashlib.sha256(raw).hexdigest()}
+
+    class Repo:
+        base = "https://storage.invalid"
+    repo = Repo()
+    repo.headers = headers
+    original_client = httpx.AsyncClient
+
+    def handler(request):
+        assert request.url.path == "/storage/v1/object/authenticated/inkloom-private/" + path
+        assert request.headers["apikey"] == "test-only"
+        return httpx.Response(200, content=raw)
+
+    monkeypatch.setattr(visual.httpx, "AsyncClient", lambda **kwargs: original_client(
+        transport=httpx.MockTransport(handler), **kwargs))
+    assert await original_image(repo, org, doc) == raw
+    with pytest.raises(ValueError, match="hash mismatch"):
+        await original_image(repo, org, {**doc, "sha256": "0" * 64})
+    monkeypatch.setattr(visual, "MAX_BYTES", 5)
+    with pytest.raises(ValueError, match="exceeds limit"):
+        await original_image(repo, org, doc)
+
+
+@pytest.mark.asyncio
+async def test_local_ocr_failure_is_advisory(monkeypatch):
+    from app import visual
+
+    async def load(repo, org, doc):
+        return encode(fixture(), "PNG")
+
+    def unavailable(image):
+        raise RuntimeError("unavailable")
+
+    monkeypatch.setattr(visual, "original_image", load)
+    monkeypatch.setattr(visual, "local_ocr", unavailable)
+    result = await advanced_findings(None, "test-org", {"sha256": "a"}, [], [])
+    assert len(result) == 1
+    assert "OCR unavailable" in result[0].explanation
+    assert result[0].severity == "warning"
+    assert not result[0].quote and not result[0].correction
+
+
+def test_ocr_disclaimer_fact_and_contrast_are_advisory():
+    image = Image.new("RGB", (100, 100), "#eeeeee")
+    ImageDraw.Draw(image).rectangle((10, 10, 50, 80), fill="white")
+    sources = [
+        {"id": str(uuid4()), "rule_type": "fact", "body": "Price is 10",
+         "config": {"subject": "Price", "value": "10"}},
+        {"id": str(uuid4()), "rule_type": "required_disclaimer", "body": "Check terms",
+         "config": {"text": "Check terms"}},
+        {"id": str(uuid4()), "rule_type": "contrast", "body": "Minimum 4.5",
+         "config": {"minimum": 4.5}},
+    ]
+    findings = ocr_findings(
+        image, [{"text": "Price is 15", "confidence": 95, "box": (0, 0, 100, 100)}],
+        sources,
+    )
+    assert {"fact", "disclaimer", "accessibility"}.issubset({i.category for i in findings})
+    assert all(not i.quote and not i.correction for i in findings)
+    assert all(i.evidence_status == "INSUFFICIENT_EVIDENCE" for i in findings if i.source_id)
