@@ -31,7 +31,7 @@ async def original_image(repo, org, doc):
         or parts[0] != org
         or path != "/".join(parts)
         or not all(re.fullmatch(r"[0-9a-fA-F-]{36}", p) for p in parts[:2])
-        or not re.fullmatch(r"[0-9a-fA-F-]{36}\\.(?:png|jpg|jpeg)", parts[2])
+        or not re.fullmatch(r"[0-9a-fA-F-]{36}[.](?:png|jpg|jpeg)", parts[2])
         or any(p in (".", "..") for p in parts)
         or doc.get("mime") not in ("image/png", "image/jpeg")
     ):
