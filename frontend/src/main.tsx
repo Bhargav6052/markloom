@@ -15,3 +15,8 @@ import './comfort.css';
 createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><MotionProvider><App/></MotionProvider></BrowserRouter></React.StrictMode>);
 
 import "./theme.css";
+import "./liquid-glass.css";
+import "./living-loom.css";
+import "./premiere.css";
+
+import "./signature.css";
