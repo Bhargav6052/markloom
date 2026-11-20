@@ -26,7 +26,7 @@ export default function Landing(){
   <main id="main-content" className="public-main">
    <div className="pile-story"><div className="pile-visual-rail"><div className="pile-sticky-stage"><FlowNavigation animated={!reduced}/></div></div>
    <section className="hero" aria-labelledby="hero-title">
-    <div className="hero-copy"><p className="kicker hero-eyebrow">BRAND KNOWLEDGE. IN CONTEXT.</p><h1 id="hero-title"><span className="hero-line"><span>Proof behind</span></span><span className="hero-line accent-line"><span>every idea.</span></span></h1><p className="hero-subcopy">From approved knowledge to confident decisions.</p><div className="hero-actions"><Link className="primary-link" to="/signup" onClick={cta}>Create your workspace <span aria-hidden="true">↗</span></Link></div></div>
+    <div className="hero-copy"><p className="kicker hero-eyebrow">BRAND KNOWLEDGE. IN CONTEXT.</p><h1 id="hero-title"><span className="hero-line"><span>Proof behind</span></span><span className="hero-line accent-line"><span>every idea.</span></span></h1><p className="hero-subcopy">Review drafts against approved brand knowledge, trace each finding to evidence, and keep final approval human.</p><div className="hero-actions"><Link className="primary-link" to="/signup" onClick={cta}>Create your workspace <span aria-hidden="true">↗</span></Link></div></div>
     <div className="hero-bottom"><a href="#source" className="scroll-cue"><span className="scroll-line" aria-hidden="true"/>Scroll to explore</a></div>
    </section>
    <WorkflowChapters/>

@@ -229,3 +229,34 @@ html[data-glass-solid=true] .cookie-settings {backdrop-filter:none;-webkit-backd
 }
 html[data-motion-mode=reduced] button,html[data-motion-mode=reduced] .button,
 html[data-motion-mode=reduced] .public-nav a,html[data-motion-mode=reduced] .shell nav a {transition:none!important;transform:none!important}
+
+/* Task-oriented refinements: a restrained glass shell around actual work. */
+.shell > aside nav .nav-group {display:grid;gap:3px}
+.shell > aside nav .nav-group-label {
+ margin:12px 10px 4px;color:var(--muted);font-size:.63rem;
+ text-transform:uppercase;letter-spacing:.11em;font-weight:650;
+}
+.shell > aside nav .nav-group:first-child .nav-group-label {margin-top:3px}
+.shell > aside .foot .account-role {color:var(--gold);font-weight:600}
+.workspace-filters {display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0 16px}
+.workspace-filters label {flex:1 1 140px;min-width:0}
+.workspace-filters label:first-child {flex-basis:240px}
+.review-guide {
+ display:grid;gap:14px;border:1px solid var(--glass-edge);border-radius:20px;
+ padding:18px 20px;margin-top:18px;background:linear-gradient(135deg,#303950,#1d2436);
+}
+.review-guide strong {display:block;font-size:1.14rem;margin-top:5px}
+.review-guide p {margin:5px 0 0}
+.review-guide nav {display:flex;flex-wrap:wrap;gap:8px;overflow:visible}
+html[data-surface=workspace] .review-guide nav a {background:var(--glass-field);color:var(--text);border:1px solid var(--glass-edge);font-size:.82rem}
+.shell section[id] {scroll-margin-top:18px}
+html[data-surface=workspace] .shell .finding-severity[data-severity=critical] {color:#ffcbc8;border-color:#e18f91;background:#40232c}
+html[data-surface=workspace] .shell .finding-severity[data-severity=warning] {color:#ffe0ad;border-color:#d7ac6b;background:#392e23}
+html[data-surface=workspace] .shell .finding-severity[data-severity=info] {color:#c5d5ff;border-color:#8a9dc9;background:#26314d}
+@media(max-width:800px) {
+ .shell > aside nav .nav-group {display:flex;flex:none;gap:4px}
+ .shell > aside nav .nav-group-label {display:none}
+ .review-guide {padding:14px;gap:10px}
+ .workspace-filters button {width:100%}
+ .landing .public-nav {height:auto}
+}
