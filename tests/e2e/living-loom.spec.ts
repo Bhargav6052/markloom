@@ -6,6 +6,17 @@ test('desktop renders actual WebGL and follows source, draft and decision scroll
  await page.goto('/');
  await page.getByRole('button',{name:'Reject optional',exact:true}).click();
  await expect(page.getByRole('heading',{level:1})).toContainText('Proof behind');
+ await expect(page.locator('.brand-logo-webgl canvas')).toBeVisible({timeout:25000});
+ await expect(page.locator('.brand-logo-fallback')).toHaveClass(/is-rendered/,{timeout:25000});
+ const logo=page.locator('.brand-logo-webgl');
+ await expect(logo).toHaveAttribute('data-logo-motion','idle');
+ const startYaw=Number(await logo.getAttribute('data-logo-yaw'));
+ await expect.poll(async()=>Number(await logo.getAttribute('data-logo-yaw'))-startYaw).toBeGreaterThan(.025);
+ await page.locator('.brand-hero').hover({position:{x:120,y:200}});
+ await expect(logo).toHaveAttribute('data-logo-motion','cursor');
+ await expect(logo).toHaveAttribute('data-logo-motion','idle',{timeout:5000});
+ await page.screenshot({path:'test-results/signature-hero.png'});
+ await page.locator('#loom-hero').evaluate(e=>e.scrollIntoView({block:'start',behavior:'instant'}));
  await expect(page.locator('.loom-webgl canvas')).toBeVisible({timeout:25000});
  await expect(page.locator('.loom-fallback')).toHaveClass(/is-rendered/,{timeout:25000});
  await expect(page.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();
@@ -26,6 +37,9 @@ test('reduced motion uses a static scene and preserves all stage links',async({p
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('/');
  await page.getByRole('button',{name:'Reject optional',exact:true}).click();
+ await expect(page.locator('.brand-logo-fallback svg')).toBeVisible();
+ await expect(page.locator('.brand-logo-webgl canvas')).toHaveCount(0);
+ await page.locator('#loom-hero').evaluate(e=>e.scrollIntoView({block:'start',behavior:'instant'}));
  await expect(page.locator('.loom-fallback svg')).toBeVisible();
  await expect(page.locator('.loom-webgl canvas')).toHaveCount(0);
  await page.getByRole('navigation',{name:'Workflow stages'}).getByRole('link',{name:'02 Draft'}).click();
@@ -41,6 +55,8 @@ test('mobile has distinct static stage art with readable content and no horizont
  await page.getByRole('button',{name:'Reject optional',exact:true}).click();
  await expect(page.getByRole('heading',{level:1})).toBeVisible();
  await expect(page.locator('.loom-webgl canvas')).toHaveCount(0);
+ await expect(page.locator('.brand-logo-webgl canvas')).toHaveCount(0);
+ await expect(page.locator('.brand-logo-fallback svg')).toBeVisible();
  await expect(page.locator('.loom-mobile-art svg')).toHaveCount(3);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.screenshot({path:'test-results/loom-mobile.png',fullPage:true});

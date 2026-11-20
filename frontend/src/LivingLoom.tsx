@@ -62,10 +62,10 @@ export default function LivingLoom({onCreate}:{onCreate:()=>void}){
  <div className="loom-visual-foot"><span>Connected intelligence</span><span>{stage===0?'Explore the workflow':String(stage).padStart(2,'0')+' / 03'}</span></div>
  </div></div>
  <div className="loom-copy-rail">
- <section className="loom-intro" id="loom-hero" aria-labelledby="hero-title">
- <p className="loom-kicker">BRAND KNOWLEDGE. IN CONTEXT.</p>
- <h1 id="hero-title">Proof behind<br/><em>every idea.</em></h1>
- <p className="loom-lead">From approved knowledge and real evidence to confident human decisions.</p>
+ <section className="loom-intro" id="loom-hero" aria-labelledby="workflow-title">
+ <p className="loom-kicker">SOURCE / DRAFT / DECISION</p>
+ <h2 id="workflow-title">Every idea has a journey.</h2>
+ <p className="loom-lead">Connect trusted knowledge, review your content and keep the final decision human.</p>
  <div className="loom-actions"><Link className="primary-link" to="/signup" onClick={onCreate}>Create your workspace <span aria-hidden="true">↗</span></Link><Link className="loom-secondary-link" to="/product-tour">Explore product <span aria-hidden="true">↗</span></Link></div>
  <nav className="loom-stage-links" aria-label="Workflow stages">{chapters.map(c=><a href={'#'+c.id} key={c.id} aria-current={stage===Number(c.n)?'location':undefined}><span>{c.n}</span>{c.name}</a>)}</nav>
  <a className="loom-scroll" href="#source">Scroll to explore <span aria-hidden="true">↓</span></a>
