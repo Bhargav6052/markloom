@@ -10,9 +10,9 @@ export default function Landing(){
  const {effective}=useMotionSettings();const {hash}=useLocation();
  useEffect(()=>{const id=hash.slice(1);if(!id)return;const aliases:Record<string,string>={'product-tour':'source','how-it-works':'source','experience':'source','our-principles':'principles'};const frame=requestAnimationFrame(()=>document.getElementById(aliases[id]||id)?.scrollIntoView({behavior:'instant'}));return()=>cancelAnimationFrame(frame)},[hash]);
  const cta=()=>void trackPublicEvent('cta_click','/');
- return <div className="landing loom-led" data-motion-mode={effective}>
+ return <div className="landing loom-led premiere-led" data-motion-mode={effective}>
   <a className="skip-link" href="#main-content">Skip to content</a>
-  <nav className="public-nav" aria-label="Public navigation"><Link className="wordmark" to="/" aria-label="Markloom home">markloom<span style={{color:'var(--gold)'}}>.</span></Link><div className="public-links">{[['/how-it-works','How it works'],['/our-principles','Our principles'],['/product-tour','Product tour']].map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</div><Link className="nav-signin" to="/login">Sign in <span aria-hidden="true">↗</span></Link></nav>
+  <nav className="public-nav" aria-label="Public navigation"><Link className="wordmark" to="/" aria-label="Markloom home">markloom<span style={{color:'var(--gold)'}}>.</span></Link><div className="public-links">{[['/how-it-works','How it works'],['/our-principles','Our principles'],['/product-tour','Product tour']].map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</div><div className="premiere-nav-actions"><Link className="nav-signin" to="/login">Sign in</Link><Link className="primary-link premiere-nav-cta" to="/signup" onClick={cta}>Create workspace ↗</Link></div></nav>
   <main id="main-content" className="public-main">
    <LivingLoom onCreate={cta}/>
    <div id="principles"><EvidenceStory/></div>

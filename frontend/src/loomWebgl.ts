@@ -3,40 +3,25 @@ import {loomBlend} from './loomModel';
 import type {MutableRefObject} from 'react';
 const TAU=Math.PI*2;
 const SAMPLES=96;
-const PARTS=46;
+const PARTS=88;
 const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z);
 
 function curve(stage:number){
  const points:THREE.Vector3[]=[];
- if(stage===3){
-  // Closed, softened silhouette of a check mark with a thick sculptural edge.
-  return new THREE.CatmullRomCurve3([
-   v(-1.48,.12,0),v(-1.15,.40,.02),v(-.45,-.25,.06),v(.95,1.05,0),
-   v(1.35,.79,-.02),v(-.41,-.99,-.03),v(-.70,-.97,0),
-  ],true,'centripetal');
- }
  for(let i=0;i<SAMPLES;i++){
   const t=i/SAMPLES*TAU;
-  if(stage===0){
-   const r=1.03+.39*Math.cos(3*t);
-   points.push(v(r*Math.cos(2*t),r*Math.sin(2*t),.48*Math.sin(3*t)));
-  }else if(stage===1){
-   const r=1.03+.20*Math.cos(t);
-   points.push(v(r*Math.cos(3*t),.90*Math.sin(t),r*Math.sin(3*t)));
-  }else{
-   const r=1.12+.21*Math.cos(5*t);
-   points.push(v(r*Math.cos(3*t),r*Math.sin(3*t),.78*Math.sin(5*t)));
-  }
+  const rx=[2.0,1.72,1.95,2.08][stage],ry=[.88,1.16,1.34,.96][stage];
+  points.push(v(rx*Math.cos(t),ry*Math.sin(t)+.13*Math.sin(2*t),.55*Math.sin(t+stage*.4)));
  }
  return new THREE.CatmullRomCurve3(points,true,'centripetal');
 }
 function fragment(stage:number,i:number){
- const t=i/PARTS*TAU;
- const phi=Math.acos(1-2*(i+.5)/PARTS),theta=i*2.39996323;
- if(stage===0)return v(1.78*Math.cos(t),1.74*Math.sin(t),.45*Math.sin(3*t));
- if(stage===1)return v((i%5-2)*.55,(Math.floor(i/5)%5-2)*.43,(Math.floor(i/25)-.5)*.72);
- if(stage===2)return v(1.63*Math.sin(phi)*Math.cos(theta),1.63*Math.cos(phi),1.63*Math.sin(phi)*Math.sin(theta));
- return v(1.77*Math.cos(t),1.77*Math.sin(t),.12*Math.sin(4*t));
+ const t=i/PARTS*TAU,phi=Math.acos(1-2*(i+.5)/PARTS),theta=i*2.39996323;
+ if(stage===0)return v(2.16*Math.cos(t),1.55*Math.sin(t),.55*Math.sin(3*t));
+ if(stage===1)return v(-1.25+(i%5)*.22,-.84+(Math.floor(i/5)%5)*.35,(Math.floor(i/25)-.5)*.6);
+ if(stage===2)return v(1.82*Math.sin(phi)*Math.cos(theta),1.48*Math.cos(phi),1.1*Math.sin(phi)*Math.sin(theta));
+ const u=i/(PARTS-1);
+ return u<.36?v(-1.05+u/.36*.65,.05-u/.36*.65,.16*Math.sin(i)):v(-.4+(u-.36)/.64*1.62,-.6+(u-.36)/.64*1.42,.16*Math.sin(i));
 }
 function environment(){
  const width=256,height=128,bytes=new Uint8Array(width*height*4);
@@ -65,14 +50,14 @@ export function mountLoom(host:HTMLElement,progress:MutableRefObject<number>,ful
  const key=new THREE.DirectionalLight(0xddeaff,3.3);key.position.set(-3,4,5);scene.add(key);
  const rim=new THREE.DirectionalLight(0xb7a2ff,3.7);rim.position.set(3,-1,-3);scene.add(rim);
  const group=new THREE.Group();scene.add(group);
- const tubes=[0,1,2,3].map(stage=>new THREE.TubeGeometry(curve(stage),144,stage===3?.13:.105,12,true));
+ const tubes=[0,1,2,3].map(stage=>new THREE.TubeGeometry(curve(stage),144,stage===3?.065:.085,12,true));
  const geometry=tubes[0];
  geometry.morphAttributes.position=tubes.slice(1).map(g=>g.attributes.position.clone());
  geometry.morphAttributes.normal=tubes.slice(1).map(g=>g.attributes.normal.clone());
  // The base geometry bounds do not cover every morph: do not frustum-cull the sculpture.
  const material=new THREE.MeshPhysicalMaterial({
   color:0xb4c4f5,metalness:.26,roughness:.18,clearcoat:1,clearcoatRoughness:.09,
-  transmission:.27,thickness:.30,ior:1.43,iridescence:.35,iridescenceIOR:1.3,envMapIntensity:1.5
+  transmission:.52,thickness:.30,ior:1.43,iridescence:.72,iridescenceIOR:1.3,envMapIntensity:1.5
  });
  const sculpture=new THREE.Mesh(geometry,material);sculpture.frustumCulled=false;group.add(sculpture);
  const fragmentGeo=new THREE.OctahedronGeometry(1,0);
@@ -85,7 +70,7 @@ export function mountLoom(host:HTMLElement,progress:MutableRefObject<number>,ful
  const observer=new ResizeObserver(resize);observer.observe(host);resize();
  const mouse=(e:PointerEvent)=>{const rect=host.getBoundingClientRect();pointer.set(Math.max(-1,Math.min(1,(e.clientX-rect.left)/rect.width*2-1)),Math.max(-1,Math.min(1,(e.clientY-rect.top)/rect.height*2-1)))};
  const reset=()=>pointer.set(0,0);
- host.addEventListener('pointermove',mouse);host.addEventListener('pointerleave',reset);
+ const pointerHost=host.parentElement||host;pointerHost.addEventListener('pointermove',mouse);pointerHost.addEventListener('pointerleave',reset);
  const lost=(e:Event)=>{e.preventDefault();contextLost=true;cancelAnimationFrame(raf);onReady(false)};
  renderer.domElement.addEventListener('webglcontextlost',lost);
  const frame=(time:number)=>{
@@ -104,7 +89,7 @@ export function mountLoom(host:HTMLElement,progress:MutableRefObject<number>,ful
   for(let i=0;i<PARTS;i++){
    position.copy(targets[from][i]).lerp(targets[to][i],mix);
    dummy.position.copy(position);
-   const size=(.043+(i%5)*.012)*(1+.25*weights[2]);
+   const size=(.025+(i%5)*.009)*(1+.25*weights[2]);
    dummy.scale.set(size,size*(1+(i%3)*.45),size);
    dummy.rotation.set(i*.61,current*.32+i*.27,i*.37);
    dummy.updateMatrix();fragments.setMatrixAt(i,dummy.matrix);
@@ -115,5 +100,5 @@ export function mountLoom(host:HTMLElement,progress:MutableRefObject<number>,ful
  const sync=()=>{cancelAnimationFrame(raf);if(visible&&!document.hidden&&!dead&&!contextLost){last=performance.now();raf=requestAnimationFrame(frame)}};
  const view=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??false;sync()},{rootMargin:'80px'});view.observe(host);
  document.addEventListener('visibilitychange',sync);sync();
- return()=>{dead=true;cancelAnimationFrame(raf);view.disconnect();observer.disconnect();document.removeEventListener('visibilitychange',sync);host.removeEventListener('pointermove',mouse);host.removeEventListener('pointerleave',reset);renderer.domElement.removeEventListener('webglcontextlost',lost);tubes.forEach(g=>g.dispose());fragmentGeo.dispose();fragmentMat.dispose();material.dispose();world.dispose();env.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove()};
+ return()=>{dead=true;cancelAnimationFrame(raf);view.disconnect();observer.disconnect();document.removeEventListener('visibilitychange',sync);pointerHost.removeEventListener('pointermove',mouse);pointerHost.removeEventListener('pointerleave',reset);renderer.domElement.removeEventListener('webglcontextlost',lost);tubes.forEach(g=>g.dispose());fragmentGeo.dispose();fragmentMat.dispose();material.dispose();world.dispose();env.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove()};
 }

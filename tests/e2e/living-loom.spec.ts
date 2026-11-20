@@ -5,10 +5,11 @@ test('desktop renders actual WebGL and follows source, draft and decision scroll
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');
  await page.getByRole('button',{name:'Reject optional',exact:true}).click();
- await expect(page.getByRole('heading',{level:1})).toContainText('Make every');
+ await expect(page.getByRole('heading',{level:1})).toContainText('Proof behind');
  await expect(page.locator('.loom-webgl canvas')).toBeVisible({timeout:25000});
  await expect(page.locator('.loom-fallback')).toHaveClass(/is-rendered/,{timeout:25000});
- await expect(page.getByRole('link',{name:'Sign in'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();
+ await expect(page.locator('.premiere-panel')).toHaveCount(3);
  await page.screenshot({path:'test-results/loom-desktop.png'});
  for(const [id,label] of [['source','Source'],['draft','Draft'],['decision','Decision']]){
   await page.locator('#'+id).evaluate(e=>e.scrollIntoView({block:'start',behavior:'instant'}));
