@@ -1,13 +1,14 @@
 import {useEffect,useId,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {useMotionSettings} from './MotionSettings';
+import OpticalBackdrop from './OpticalBackdrop';
 
 export function MarkloomSymbol(){
  return <svg aria-hidden="true" className="markloom-symbol" viewBox="0 0 44 44" fill="none"><path d="M5 35L10 10Q11 7 14 11L22 25L31 9Q34 5 35 11L40 35" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
 }
 function StillLogo(){
  const uid=useId(),metal=uid+'-glass',rim=uid+'-rim';
- const path='M96 326L127 128Q139 82 167 121L250 242Q260 260 274 239L355 104Q383 66 395 123L424 326';
+ const path='M76 313L121 135C134 79 161 86 186 130L233 218C250 248 264 250 282 220L336 111C360 63 393 76 410 127L444 323';
  return <svg className="brand-static-logo" viewBox="0 0 520 440" aria-hidden="true">
  <defs><linearGradient id={metal} x1="0" y1="0" x2=".75" y2="1"><stop stopColor="#b999d2"/><stop offset=".19" stopColor="#e9ccf9"/><stop offset=".39" stopColor="#655078"/><stop offset=".58" stopColor="#9771be"/><stop offset=".81" stopColor="#73558e"/><stop offset="1" stopColor="#f6d4a0"/></linearGradient><linearGradient id={rim}><stop stopColor="#f7d394"/><stop offset=".43" stopColor="#e4c1ff"/><stop offset=".72" stopColor="#a783d0"/><stop offset="1" stopColor="#f8daae"/></linearGradient></defs>
  <path d={path} transform="translate(8 9)" stroke="#372643" strokeWidth="45" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -29,7 +30,7 @@ export default function BrandHero({onCreate}:{onCreate:()=>void}){
   return()=>{dead=true;dispose?.()};
  },[wide,effective]);
  return <section className="brand-hero" id="brand-hero" ref={root} aria-labelledby="hero-title">
- <div className="brand-haze" aria-hidden="true"/><div className="brand-backtype" aria-hidden="true">markloom</div><div className="signature-wave signature-wave-top" aria-hidden="true"/><div className="signature-wave signature-wave-bottom" aria-hidden="true"/>
+ <div className="brand-haze" aria-hidden="true"/><div className="brand-backtype" aria-hidden="true">markloom</div><OpticalBackdrop/>
  <div className="brand-hero-layout">
  <div className="brand-hero-copy"><p className="brand-eyebrow">Brand knowledge. In context.</p>
  <h1 id="hero-title">Proof behind<br/><em>every idea.</em></h1>

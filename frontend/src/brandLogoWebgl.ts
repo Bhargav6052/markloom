@@ -2,37 +2,57 @@ import * as THREE from 'three';
 import {createMarkloomRibbon} from './brandRibbonGeometry';
 
 const TAU=2*Math.PI;
-function studioMap(){
- const width=256,height=128,data=new Uint16Array(width*height*4);
- for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-  const u=x/width,v=y/height,soft=(a:number,b:number,sx:number,sy:number)=>Math.exp(-(((u-a)/sx)**2+((v-b)/sy)**2));
-  const white=soft(.18,.30,.026,.23),purple=soft(.69,.41,.065,.31),gold=soft(.43,.66,.13,.024),strip=soft(.87,.21,.014,.20);
-  const i=(y*width+x)*4;
-  data[i]=THREE.DataUtils.toHalfFloat(.035+5.2*white+1.5*purple+5.8*gold+3.9*strip);
-  data[i+1]=THREE.DataUtils.toHalfFloat(.024+4.8*white+.72*purple+3.6*gold+3.0*strip);
-  data[i+2]=THREE.DataUtils.toHalfFloat(.052+5.5*white+3.9*purple+1.15*gold+5.4*strip);
-  data[i+3]=THREE.DataUtils.toHalfFloat(1);
- }
- const texture=new THREE.DataTexture(data,width,height,THREE.RGBAFormat,THREE.HalfFloatType);texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;texture.needsUpdate=true;return texture;
-}
 export function mountBrandLogo(host:HTMLElement,interaction:HTMLElement,full:boolean,onReady:(value:boolean)=>void){
  const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setClearColor(0x15131a,0);
  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
  renderer.domElement.setAttribute('aria-hidden','true');host.appendChild(renderer.domElement);
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(37,1,.1,35);camera.position.set(0,0,6.6);
- const map=studioMap(),pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromEquirectangular(map);
- scene.environment=env.texture;scene.environmentIntensity=1.35;
- scene.add(new THREE.HemisphereLight(0xf3e6ff,0x34283e,.32));
- const key=new THREE.DirectionalLight(0xfff0de,.9);key.position.set(-4,4,4);scene.add(key);
- const violet=new THREE.DirectionalLight(0xc4a0ee,1.45);violet.position.set(3,1,-3);scene.add(violet);
- const warm=new THREE.DirectionalLight(0xeecb89,1.05);warm.position.set(-2,-3,1);scene.add(warm);
  const group=new THREE.Group();scene.add(group);
  const geometry=createMarkloomRibbon();
- const material=new THREE.MeshPhysicalMaterial({color:0xdac5eb,metalness:.04,roughness:.095,transmission:.84,thickness:.44,ior:1.48,clearcoat:1,clearcoatRoughness:.045,iridescence:.55,iridescenceIOR:1.40,envMapIntensity:1.65,specularIntensity:1});
- const ribbon=new THREE.Mesh(geometry,material);group.add(ribbon);
- const highlight=new THREE.MeshPhysicalMaterial({color:0xcbb1e6,metalness:.56,roughness:.18,transparent:true,opacity:.14,depthWrite:false,clearcoat:1,envMapIntensity:1.5});
- const glint=new THREE.Mesh(geometry,highlight);glint.scale.setScalar(1.003);group.add(glint);group.rotation.z=-.035;
+ const material=new THREE.ShaderMaterial({
+  transparent:true,depthWrite:true,side:THREE.FrontSide,
+  vertexShader:`
+   attribute vec3 ribbonProfile;
+   varying vec3 vProfile;
+   varying vec3 vNormal;
+   varying vec3 vView;
+   varying vec3 vLocal;
+   void main(){
+    vProfile=ribbonProfile;
+    vLocal=position;
+    vec4 mv=modelViewMatrix*vec4(position,1.0);
+    vNormal=normalize(normalMatrix*normal);
+    vView=-mv.xyz;
+    gl_Position=projectionMatrix*mv;
+   }`,
+  fragmentShader:`
+   varying vec3 vProfile;
+   varying vec3 vNormal;
+   varying vec3 vView;
+   varying vec3 vLocal;
+   float band(float x,float center,float width){float d=(x-center)/width;return exp(-d*d);}
+   void main(){
+    vec3 n=normalize(vNormal),eye=normalize(vView),reflected=reflect(-eye,n);
+    float t=vProfile.x,u=abs(vProfile.y);
+    float fresnel=pow(1.0-abs(dot(n,eye)),3.1);
+    float edge=smoothstep(.83,.995,u);
+    float strip=band(reflected.x,-.58,.16)*band(reflected.y,.35,.8);
+    float sweep=band(reflected.y,.67,.17);
+    float gold=clamp(.92*band(t,.02,.10)+.85*band(t,.29,.065)+.85*band(t,.51,.09)+.92*band(t,.98,.095),0.0,1.0);
+    float violet=band(t,.72,.18)+.35*band(t,.38,.2);
+    float stripe=band(sin(t*18.0+vProfile.y*1.6),.88,.28);
+    vec3 body=mix(vec3(.15,.09,.23),vec3(.48,.24,.72),clamp(.24+sweep*.4+violet*.30+stripe*.12,0.0,1.0));
+    body=mix(body,vec3(.81,.47,.18),gold*.58*(.4+strip*.6));
+    vec3 rim=mix(vec3(.76,.48,1.0),vec3(1.0,.78,.42),gold);
+    float shine=clamp(edge*.70+fresnel*.50+strip*.43,0.0,1.0);
+    vec3 col=mix(body,rim,shine);
+    col+=vec3(1.0,.87,.73)*pow(max(0.0,strip*edge+sweep*fresnel),2.0)*.55;
+    float alpha=clamp(.52+edge*.38+fresnel*.27+strip*.15+gold*.08,.52,1.0);
+    gl_FragColor=vec4(col,alpha);
+   }`
+ });
+ const ribbon=new THREE.Mesh(geometry,material);group.add(ribbon);group.rotation.z=-.035;
  const pointer=new THREE.Vector2(),aim=new THREE.Vector2();
  let yaw=-.13,pitch=.08,raf=0,last=0,lastPointer=-Infinity,lastReport=0,visible=false,dead=false,lostContext=false,rendered=false;
  const speed=full?.35:.19;
@@ -62,5 +82,5 @@ export function mountBrandLogo(host:HTMLElement,interaction:HTMLElement,full:boo
  const sync=()=>{cancelAnimationFrame(raf);if(visible&&!document.hidden&&!dead&&!lostContext){last=performance.now();raf=requestAnimationFrame(tick)}};
  const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??false;sync()});observer.observe(host);
  document.addEventListener('visibilitychange',sync);
- return()=>{dead=true;cancelAnimationFrame(raf);observer.disconnect();resizeObserver.disconnect();document.removeEventListener('visibilitychange',sync);interaction.removeEventListener('pointermove',move);interaction.removeEventListener('pointerleave',leave);renderer.domElement.removeEventListener('webglcontextlost',lost);geometry.dispose();material.dispose();highlight.dispose();map.dispose();env.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();delete host.dataset.logoMotion;delete host.dataset.logoYaw;delete host.dataset.logoPitch};
+ return()=>{dead=true;cancelAnimationFrame(raf);observer.disconnect();resizeObserver.disconnect();document.removeEventListener('visibilitychange',sync);interaction.removeEventListener('pointermove',move);interaction.removeEventListener('pointerleave',leave);renderer.domElement.removeEventListener('webglcontextlost',lost);geometry.dispose();material.dispose();renderer.dispose();renderer.domElement.remove();delete host.dataset.logoMotion;delete host.dataset.logoYaw;delete host.dataset.logoPitch};
 }

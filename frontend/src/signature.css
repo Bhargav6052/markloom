@@ -88,3 +88,22 @@ html[data-motion-mode=reduced] .premiere-led .brand-glass-button,html[data-motio
 @media(max-width:899px){.premiere-led .public-nav{width:calc(100% - 24px);padding:9px 12px}.premiere-led .public-nav .public-links{width:100%;justify-content:space-around}.brand-hero{min-height:0;padding:12px 22px 25px}.brand-hero-layout{display:flex;flex-direction:column}.brand-backtype{top:2%;font-size:24vw}.brand-hero-art{height:clamp(245px,64vw,430px);width:100%;margin:10px 0 0}.brand-hero-copy{padding:5px 0 12px;width:100%}.brand-hero h1{font-size:clamp(3rem,9.45vw,5.7rem);margin:16px 0 14px}.brand-art-caption{bottom:6%;font-size:.55rem}.signature-teasers{grid-template-columns:1fr;gap:8px;padding:0 22px 16px}.premiere-led .signature-teasers a{min-height:58px;border-radius:18px}.brand-actions{gap:8px;margin-top:20px}}
 @media(prefers-reduced-motion:reduce){.premiere-led .signature-teasers a{transform:none!important;transition:none!important}}
 html[data-motion-mode=reduced] .premiere-led .signature-teasers a{transform:none!important;transition:none!important}
+
+/* Final mockup fidelity: photographic-style layers without rasterized navigation/text. */
+.signature-optical-scene{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.brand-backtype{z-index:-2;background:linear-gradient(172deg,#9779af 0%,#685279 27%,#34273f 62%,#18131f 99%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.075em}
+.brand-haze{z-index:-3}
+.brand-hero-art{margin-top:clamp(15px,2.5vw,38px)}
+.brand-logo-webgl,.brand-logo-fallback{inset:3% 7% 9%;filter:drop-shadow(0 0 7px #9a5be78a) drop-shadow(0 8px 12px #a56bd22b)}
+.brand-orbit{inset:31% -1% 32%;border-width:2px;box-shadow:0 0 8px #d5b2ff9c,0 0 26px #9039ff83}
+.brand-orbit-gold{inset:68% 17% 14%;border-width:1px;box-shadow:0 0 8px #ecc28b9c}
+.brand-reflection{bottom:1%;height:15%;filter:blur(8px)}
+.brand-art-caption{bottom:12%}
+.brand-hero-copy{padding-top:clamp(80px,10vw,165px)}
+.premiere-led .brand-glass-button{font-weight:500}
+.premiere-led .brand-glass-button.primary-link{padding:14px 22px;min-height:54px}
+.premiere-led .signature-teasers a{border-radius:32px 32px 16px 16px;background:linear-gradient(153deg,#594266bf,#2c2237e6);box-shadow:inset 0 1px 2px #eed5ff99,inset 0 -1px 10px #bd88e325,0 -7px 22px #8a5eab1c}
+.markloom-symbol{color:#e0bbed;filter:drop-shadow(0 0 3px #d9a5eb8a)}
+@media(max-width:899px){.brand-hero-copy{padding-top:5px}.brand-hero-art{margin-top:10px}.signature-optical-scene{opacity:.57}.brand-art-caption{bottom:6%}.premiere-led .brand-glass-button.primary-link{padding:12px 15px;min-height:48px}}
+
+.workspace-brand{display:flex;gap:5px;align-items:center}.workspace-brand .markloom-symbol{width:26px;height:26px}

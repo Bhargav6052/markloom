@@ -15,6 +15,8 @@ test('desktop renders actual WebGL and follows source, draft and decision scroll
  await page.locator('.brand-hero').hover({position:{x:120,y:200}});
  await expect(logo).toHaveAttribute('data-logo-motion','cursor');
  await expect(logo).toHaveAttribute('data-logo-motion','idle',{timeout:5000});
+ await expect(page.locator('.signature-teasers a')).toHaveCount(3);
+ await expect(page.locator('.signature-optical-scene')).toBeVisible();
  await page.screenshot({path:'test-results/signature-hero.png'});
  await page.locator('#loom-hero').evaluate(e=>e.scrollIntoView({block:'start',behavior:'instant'}));
  await expect(page.locator('.loom-webgl canvas')).toBeVisible({timeout:25000});
