@@ -53,3 +53,38 @@ html[data-glass-solid=true] .premiere-led .public-nav{background:#211b28;backdro
 html[data-motion-mode=reduced] .premiere-led *,html[data-motion-mode=reduced] .premiere-led *:before,html[data-motion-mode=reduced] .premiere-led *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 html[data-motion-mode=reduced] .premiere-led .brand-glass-button,html[data-motion-mode=reduced] .premiere-led .primary-link,html[data-motion-mode=reduced] .premiere-led .nav-signin{transform:none!important}
 @media(prefers-reduced-motion:reduce){.premiere-led *, .premiere-led *:before,.premiere-led *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.premiere-led .brand-glass-button,.premiere-led .primary-link,.premiere-led .nav-signin{transform:none!important}}
+
+/* Match the approved compact cinematic composition, with the M-ribbon identity. */
+.landing.premiere-led{--ink:#100d15;background:#100d15}
+.premiere-led .public-nav{position:relative;margin:10px auto 0;width:calc(100% - 36px);max-width:1660px;padding:8px clamp(14px,2.5vw,36px);background:linear-gradient(125deg,#292130d9,#15111de8 62%,#2c213bd9);border:1px solid #b7a0cc78;box-shadow:inset 0 1px 2px #e5cfff42,inset 1px -2px 4px #b393cd2b,0 8px 30px #0006;z-index:7}
+.premiere-led .public-nav .public-links{padding:2px 6px;background:linear-gradient(180deg,#34283e8c,#1c1725df);border:1px solid #c7acd63b;border-radius:999px}
+.premiere-led .primary-link,.premiere-led .brand-glass-button:not(.brand-quiet){background:linear-gradient(160deg,#f5e6ff 0%,#caa5ed 17%,#a77cd8 50%,#c9a8eb 84%,#f6ddff 100%);color:#171020;border:1px solid #f2e1ff;box-shadow:inset 0 2px 4px #fff,inset 0 -2px 6px #f0d1ffad,0 0 16px #bc85f064,0 8px 25px #9c66cf49}
+.brand-hero{min-height:clamp(620px,calc(100svh - 140px),880px);padding:0 clamp(28px,6vw,100px) 18px;background:radial-gradient(ellipse at 70% 49%,#49335388,transparent 60%),#100d15;justify-content:space-between}
+.brand-haze{background:radial-gradient(ellipse at 71% 54%,#9961cf28,transparent 48%),radial-gradient(ellipse at 70% 88%,#d2a96f27,transparent 24%),radial-gradient(ellipse at 20% 40%,#2d203c55,transparent 50%)}
+.brand-haze:after{display:none}
+.brand-backtype{left:0;top:0;width:100%;font-size:clamp(7rem,24.4vw,30rem);letter-spacing:-.09em;line-height:.9;font-weight:670;opacity:1;background:linear-gradient(172deg,#a28ab9 1%,#60506d 32%,#382c45 67%,#221b2e 92%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.signature-wave{position:absolute;pointer-events:none;z-index:-1;border-radius:50%;background:linear-gradient(175deg,transparent 5%,#684b8b24 36%,#d3a5fa76 48%,#f0d1f782 51%,#6b4f9c32 55%,#2b1c4344 65%,transparent 90%);border-top:1px solid #d6b1f58c;box-shadow:0 -5px 17px #a574ce46,inset 0 5px 16px #bd8de939}
+.signature-wave-top{width:58%;height:28%;top:-16%;left:-12%;transform:rotate(-24deg)}
+.signature-wave-bottom{width:120%;height:36%;bottom:-22%;left:-8%;transform:rotate(-9deg);border-top-color:#e9cdbb;box-shadow:0 -4px 18px #ba89e45b}
+.brand-hero-layout{grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr);max-width:1640px;min-height:0;flex:1;margin:0 auto}
+.brand-hero-copy{padding-top:clamp(100px,12vw,195px);padding-bottom:24px;z-index:2}
+.brand-hero h1{font-size:clamp(3.1rem,5.85vw,7rem);line-height:.96;max-width:100%;width:max-content;margin:22px 0 20px}
+.brand-hero h1 em{color:#c5a5e5}
+.brand-hero .brand-lead{max-width:39ch;color:#ded3e5;font-size:clamp(.96rem,1.24vw,1.25rem)}
+.brand-actions{margin-top:26px;gap:10px}
+.premiere-led .brand-glass-button{min-height:46px;padding:11px 16px;font-size:clamp(.72rem,.89vw,.86rem)}
+.brand-hero-art{height:clamp(420px,44vw,660px);width:111%;margin-left:-8%;margin-top:clamp(25px,4vw,65px)}
+.brand-logo-webgl,.brand-logo-fallback{inset:0 7% 4%;filter:drop-shadow(0 0 12px #a778d84b)}
+.brand-orbit{inset:29% -2% 29%;transform:rotate(-15deg);border-width:2px;border-top-color:#9e76d044;border-right-color:#d2b1ff;border-bottom-color:#b489f4;box-shadow:0 0 7px #cbaaff70,0 0 22px #a467ea57,inset 0 -2px 9px #ba89ff54}
+.brand-orbit-gold{inset:66% 12% 12%;transform:rotate(-4deg);border-width:1px;border-top-color:#e5bf8855;border-right-color:#f4d6aa;border-bottom-color:#f2cc94;border-left-color:#e5bf8899;box-shadow:0 0 12px #e7b97857}
+.brand-reflection{left:6%;right:2%;bottom:2%;height:14%;background:radial-gradient(ellipse at 35% 36%,#bd87ee99,transparent 37%),radial-gradient(ellipse at 76% 41%,#f0c99070,transparent 35%),radial-gradient(ellipse at 60% 50%,#c3a4f95c,transparent 60%);filter:blur(11px)}
+.brand-interaction-labels{position:absolute;inset:0;pointer-events:none}
+.brand-interaction-labels>span{position:absolute;right:0;color:#f9f4ff;background:linear-gradient(145deg,#42354e,#211a2b);border:1px solid #bba0cb91;border-radius:18px;padding:8px 13px;font-size:.66rem;line-height:1.35;box-shadow:inset 0 1px 1px #fff4,0 6px 16px #0004}
+.brand-interaction-labels>span:before{content:'';position:absolute;right:100%;top:50%;width:30px;height:1px;background:#d9b57f}
+.brand-cursor-label{top:18%}.brand-idle-label{bottom:26%}.brand-art-caption{bottom:9%;color:#f2d09a;font-size:.8rem}
+.signature-teasers{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:1520px;margin:0 auto;padding:0 clamp(22px,5vw,80px) 20px}
+.premiere-led .signature-teasers a{display:flex;align-items:center;justify-content:center;min-height:92px;border:1px solid #b398c67b;border-radius:26px;color:#f5edf9;background:linear-gradient(145deg,#493653aa,#211a2be6);box-shadow:inset 0 1px 2px #edccff66,inset 0 -1px 8px #d6b5fe19;transition:transform .2s;text-decoration:none;font-size:clamp(.8rem,1.2vw,1.05rem)}
+.premiere-led .signature-teasers a:hover{transform:translateY(-3px)}.premiere-led .signature-teasers a:active{transform:scale(.97)}
+@media(max-width:899px){.premiere-led .public-nav{width:calc(100% - 24px);padding:9px 12px}.premiere-led .public-nav .public-links{width:100%;justify-content:space-around}.brand-hero{min-height:0;padding:12px 22px 25px}.brand-hero-layout{display:flex;flex-direction:column}.brand-backtype{top:2%;font-size:24vw}.brand-hero-art{height:clamp(245px,64vw,430px);width:100%;margin:10px 0 0}.brand-hero-copy{padding:5px 0 12px;width:100%}.brand-hero h1{font-size:clamp(3rem,9.45vw,5.7rem);margin:16px 0 14px}.brand-art-caption{bottom:6%;font-size:.55rem}.signature-teasers{grid-template-columns:1fr;gap:8px;padding:0 22px 16px}.premiere-led .signature-teasers a{min-height:58px;border-radius:18px}.brand-actions{gap:8px;margin-top:20px}}
+@media(prefers-reduced-motion:reduce){.premiere-led .signature-teasers a{transform:none!important;transition:none!important}}
+html[data-motion-mode=reduced] .premiere-led .signature-teasers a{transform:none!important;transition:none!important}

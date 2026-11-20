@@ -13,10 +13,10 @@ export default function Landing(){
  const cta=()=>void trackPublicEvent('cta_click','/');
  return <div className="landing loom-led premiere-led" data-motion-mode={effective}>
   <a className="skip-link" href="#main-content">Skip to content</a>
-  <nav className="public-nav" aria-label="Public navigation"><Link className="wordmark" to="/" aria-label="Markloom home"><MarkloomSymbol/>markloom</Link><div className="public-links">{[['/how-it-works','How it works'],['/our-principles','Our principles'],['/product-tour','Product tour']].map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</div><div className="premiere-nav-actions"><Link className="nav-signin" to="/login">Sign in</Link><Link className="primary-link premiere-nav-cta" to="/signup" onClick={cta}>Create workspace ↗</Link></div></nav>
+  <nav className="public-nav" aria-label="Public navigation"><Link className="wordmark" to="/" aria-label="Markloom home"><MarkloomSymbol/>markloom</Link><div className="public-links">{[['/how-it-works','How it works'],['/product-tour','Product tour'],['/our-principles','Our principles']].map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</div><div className="premiere-nav-actions"><Link className="nav-signin" to="/login">Sign in</Link><Link className="primary-link premiere-nav-cta" to="/signup" onClick={cta}>Create your workspace ↗</Link></div></nav>
   <main id="main-content" className="public-main">
    <BrandHero onCreate={cta}/>
-   <LivingLoom onCreate={cta}/>
+   <nav className="signature-teasers" aria-label="Explore Markloom capabilities"><a href="#source">Trusted knowledge</a><a href="#draft">Brand governance</a><a href="#decision">Confident decisions</a></nav><LivingLoom onCreate={cta}/>
    <div id="principles"><EvidenceStory/></div>
    <section className="loom-final"><p className="loom-kicker">KNOWLEDGE IN MOTION</p><h2>Keep your brand <span>connected.</span></h2><p className="loom-detail">From approved evidence to accountable decisions. One workspace, built around your people.</p><Link className="primary-link" to="/signup" onClick={cta}>Create your workspace <span aria-hidden="true">↗</span></Link></section>
   </main>

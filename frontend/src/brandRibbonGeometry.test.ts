@@ -1,0 +1,3 @@
+import {describe,expect,it} from 'vitest';
+import {createMarkloomRibbon} from './brandRibbonGeometry';
+describe('Markloom M ribbon',()=>{it('produces finite closed indexed geometry with front-facing M proportions',()=>{const g=createMarkloomRibbon();const p=g.getAttribute('position');expect(p.count).toBe(3626);expect(Array.from(p.array).every(Number.isFinite)).toBe(true);expect(g.index!.count).toBe(21744);expect(Math.max(...Array.from(g.index!.array))).toBeLessThan(p.count);expect(g.boundingBox!.max.x-g.boundingBox!.min.x).toBeGreaterThan(3);expect(g.boundingBox!.max.y-g.boundingBox!.min.y).toBeGreaterThan(2);g.dispose()})});
