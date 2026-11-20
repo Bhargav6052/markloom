@@ -1,3 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {storedMotion,effectiveMotion} from './MotionSettings';
+import {storedMotion,effectiveMotion,storedSolidGlass} from './MotionSettings';
 describe('motion comfort preferences',()=>{it('defaults to gentle for absent, invalid or unavailable storage',()=>{expect(storedMotion()).toBe('gentle');expect(storedMotion({getItem:()=> 'bad'})).toBe('gentle');expect(storedMotion({getItem:()=>{throw Error('blocked')}})).toBe('gentle')});it('honors explicit choices and gives system reduced motion priority',()=>{expect(storedMotion({getItem:()=> 'full'})).toBe('full');expect(effectiveMotion('full',true)).toBe('reduced');expect(effectiveMotion('gentle',false)).toBe('gentle')})});
+
+describe('glass transparency preference',()=>{it('defaults to glass and accepts only explicit solid preference',()=>{expect(storedSolidGlass()).toBe(false);expect(storedSolidGlass({getItem:()=> 'true'})).toBe(true);expect(storedSolidGlass({getItem:()=> 'false'})).toBe(false);expect(storedSolidGlass({getItem:()=>{throw Error('blocked')}})).toBe(false)})});
