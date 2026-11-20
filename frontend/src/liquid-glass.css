@@ -1,0 +1,231 @@
+/* Markloom web Liquid Glass-inspired material system.
+   Navigation and controls float above readable, restrained content surfaces. */
+:root {
+  --glass-canvas: #090c16;
+  --glass-content: #171c2c;
+  --glass-field: #202638;
+  --glass-tint: rgba(28,34,51,.82);
+  --glass-edge: #8792af;
+  --glass-hairline: rgba(221,231,255,.24);
+  --glass-shine: inset 0 1px 1px rgba(255,255,255,.26), inset 0 -1px 0 rgba(180,195,230,.08);
+  --glass-shadow: 0 14px 42px rgba(0,0,0,.26);
+  --midnight: var(--glass-canvas);
+  --surface: var(--glass-content);
+  --raised: var(--glass-field);
+  --boundary: var(--glass-edge);
+  --text: #f5f7ff;
+  --muted: #bec8df;
+  --violet: #b8bcff;
+  --gold: #efcd91;
+  font-family: -apple-system,BlinkMacSystemFont,Inter,ui-sans-serif,system-ui,sans-serif;
+}
+body {
+  background: radial-gradient(ellipse at 12% 0%,#26334e 0%,transparent 46%),
+    radial-gradient(ellipse at 100% 25%,#302544 0%,transparent 40%),var(--glass-canvas);
+  background-attachment: fixed;
+}
+html[data-surface=workspace] .shell {
+  background: transparent;
+  display:grid;
+  grid-template-columns: minmax(230px,260px) minmax(0,1fr);
+  align-items:start;
+  gap: 20px;
+  padding: 0 18px;
+}
+html[data-surface=workspace] .shell > aside {
+  position: sticky;
+  top:12px;
+  height:calc(100dvh - 24px);
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:18px 14px;
+  border:1px solid var(--glass-edge);
+  border-radius:26px;
+  background: var(--glass-content);
+  box-shadow:var(--glass-shine),var(--glass-shadow);
+  overflow:visible;
+}
+.shell > aside > * { min-width:0;flex-shrink:0 }
+.shell > aside nav {
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  padding:3px 6px 5px 3px;
+}
+.shell > aside > a {font-size:.8rem;padding:8px 10px;overflow-wrap:anywhere}
+.shell > aside .foot {
+  margin:0;
+  border-top:1px solid var(--glass-edge);
+  padding-top:10px;
+  display:grid;
+  gap:6px;
+  overflow-wrap:anywhere;
+}
+.shell > aside .foot p {margin:0;line-height:1.4}
+.shell > aside .foot button {width:100%;min-height:44px}
+html[data-surface=workspace] .shell nav a {
+  border-radius:999px;
+  border:1px solid transparent;
+  padding:10px 12px;
+}
+html[data-surface=workspace] .shell nav a.active {
+  color:var(--text);
+  border-color:var(--glass-edge);
+  background:linear-gradient(135deg,#414960,#30374e);
+  box-shadow:var(--glass-shine),0 4px 13px #0003;
+}
+html[data-surface=workspace] .shell nav a:hover {
+  background:#30374e;
+}
+html[data-surface=workspace] .shell main {
+  padding:28px clamp(14px,3vw,44px) 90px 4px;
+  min-width:0;
+}
+html[data-surface=workspace] .shell .panel,
+html[data-surface=public] .public-policy .panel,
+html[data-surface=public] .auth.panel,
+.auth.panel {
+  background:linear-gradient(150deg,#1d2334,var(--glass-content) 65%);
+  border:1px solid var(--glass-hairline);
+  border-radius:24px;
+  box-shadow:inset 0 1px 0 #ffffff0d,0 7px 28px #0002;
+}
+.shell .panel {min-width:0;padding:clamp(16px,2vw,28px)}
+.shell .grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.shell .split {grid-template-columns:repeat(2,minmax(0,1fr))}
+.shell .split>* {min-width:0}
+.shell .workspace-heading {padding-bottom:20px}
+.shell .workspace-heading h1 {font-size:clamp(1.8rem,3vw,2.75rem);letter-spacing:-.05em;font-weight:550}
+.shell .metric {font-weight:570;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.shell .table-wrap {border-radius:14px}
+.shell th,.shell td {padding:14px 12px}
+.shell tbody tr:hover {background:#ffffff06}
+.shell .badge,.badge {border-radius:999px;padding:5px 10px}
+.shell pre,.shell .source,.graph-selection,.graph-canvas,.dependency-node,.product-preview,.preview-window,.evidence-demo {
+  border-radius:18px;
+}
+.shell .source {background:var(--glass-field);padding:14px;border-left:3px solid var(--violet)}
+.shell .purpose-sheet,.purpose-sheet {
+  border-radius:20px;
+  background:linear-gradient(135deg,#3d435d,#171c2c 72%);
+  box-shadow:var(--glass-shine),7px 7px 0 #0a0d18,20px 28px 40px #0005;
+}
+.shell .purpose-lens {background:#c5cdff16;box-shadow:var(--glass-shine)}
+html[data-surface=workspace] .shell input:not([type=checkbox]):not([type=radio]),
+html[data-surface=workspace] .shell select,
+html[data-surface=workspace] .shell textarea,
+[data-surface=public] .auth input:not([type=checkbox]):not([type=radio]),
+[data-surface=public] .auth select,
+[data-surface=public] .auth textarea,
+input:not([type=checkbox]):not([type=radio]),select,textarea {
+  border-radius:14px;
+  background:var(--glass-field);
+  color:var(--text);
+  border-color:var(--glass-edge);
+}
+input[type=file]::file-selector-button {border:0;border-radius:999px;background:#424b67;color:var(--text);padding:8px 12px;margin-right:10px}
+button,.button,a.primary-link,.nav-signin,.public-links a {
+  border-radius:999px!important;
+  min-height:44px;
+  box-shadow:var(--glass-shine);
+}
+html[data-surface=workspace] .shell button:not(.secondary):not(:disabled),
+html[data-surface=workspace] .shell button:not(.secondary):not(:disabled):hover,
+[data-surface=public] .auth button:not(.secondary):not(:disabled),
+[data-surface] a.button:not(.secondary),.landing .primary-link,
+.landing .public-nav .nav-signin,.site-page .public-nav .nav-signin {
+  background:linear-gradient(155deg,#d7dcff,#aeb8f7);
+  color:#101525;
+  border:1px solid #d5dcff;
+  box-shadow:var(--glass-shine),0 6px 18px #899cff24;
+}
+html[data-surface=workspace] .shell button.secondary,
+html[data-surface=workspace] .shell button.secondary:not(:disabled):hover,
+[data-surface=public] .auth button.secondary,
+button.secondary,.landing .quiet-action,.footer-preferences,
+.public-nav .public-links button,.public-nav .public-links a {
+  background:linear-gradient(155deg,#343d55,#242b40);
+  color:var(--text);
+  border:1px solid var(--glass-edge);
+  box-shadow:var(--glass-shine);
+}
+html[data-surface=workspace] .shell button:not(:disabled):hover,button:not(:disabled):hover,.button:hover,a.primary-link:hover,.nav-signin:hover {
+  transform:translateY(-1px);
+  box-shadow:var(--glass-shine),0 5px 20px #a2b3ff28;
+}
+html[data-surface=workspace] .shell button:disabled,button:disabled {background:var(--glass-field);color:var(--muted);box-shadow:none}
+.public-nav,.landing .public-nav,.site-page .public-nav {
+  border-radius:30px;
+  border:1px solid var(--glass-hairline);
+  background:var(--glass-content);
+  box-shadow:var(--glass-shine),var(--glass-shadow);
+}
+.landing .public-nav {margin:14px auto;width:calc(100% - 36px);padding-inline:clamp(12px,3vw,40px)}
+.site-page .public-nav {padding:12px 20px}
+.public-nav .public-links {gap:10px}
+.public-nav .public-links a,.public-nav .public-links button {padding:9px 15px;display:inline-flex;align-items:center;justify-content:center}
+.landing .public-nav .nav-signin,.site-page .public-nav .nav-signin {border-radius:999px!important;border-color:#d5dcff!important}
+.motion-settings,.motion-menu,.cookie-settings,.site-back-top,.graph-toolbar button {
+  border-radius:20px;
+}
+html[data-surface] body .cookie-settings,.motion-settings,.motion-menu {
+  background:var(--glass-content);border-color:var(--glass-edge);box-shadow:var(--glass-shine);
+}
+.motion-settings summary {min-height:44px}
+.consent-banner,[data-surface=public] .consent-banner {
+  background:var(--glass-content);
+  color:var(--text);border-color:var(--glass-edge);
+}
+.consent-banner h2,.consent-banner a {color:var(--text)}
+.consent-actions button:not(:disabled) {background:#d7dcff;color:#101525;border-color:#d5dcff}
+.auth-context .auth-context-title,.auth-context p,.auth-context>.wordmark {background:transparent}
+.auth-environment {gap:4vw}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html[data-surface=workspace] .shell > aside,.public-nav,.landing .public-nav,.site-page .public-nav,
+  .motion-settings,.motion-menu,html[data-surface] body .cookie-settings {
+    background:var(--glass-tint);
+    -webkit-backdrop-filter:blur(24px) saturate(145%);
+    backdrop-filter:blur(24px) saturate(145%);
+  }
+}
+/* Only navigation/utility chrome blurs; content panels and text remain opaque. */
+@media(max-width:1000px) {
+  html[data-surface=workspace] .shell {gap:12px;padding-inline:12px;grid-template-columns:220px minmax(0,1fr)}
+  .shell .split {grid-template-columns:1fr}
+}
+@media(max-width:800px) {
+  body {background-attachment:scroll}
+  html[data-surface=workspace] .shell {display:block;padding:0 12px}
+  html[data-surface=workspace] .shell > aside {position:relative;top:auto;height:auto;margin:0 0 12px;padding:16px;gap:12px;border-radius:24px}
+  .shell > aside nav {display:flex;overflow-x:auto;overflow-y:hidden;flex:none;padding:5px 6px;max-width:100%;scrollbar-width:thin}
+  .shell > aside .foot {grid-template-columns:minmax(0,1fr) auto;align-items:center}
+  .shell > aside .foot button {grid-column:2;grid-row:1 / span 2;width:auto}
+  html[data-surface=workspace] .shell main {padding:16px 0 85px}
+  .shell .panel {border-radius:20px}
+  .landing .public-nav {width:calc(100% - 24px);margin:10px auto}
+  .landing .public-nav .public-links {gap:6px}
+  .landing .public-nav .public-links a,.landing .public-nav .public-links button {padding:8px 10px;font-size:10px}
+}
+@media(max-height:600px) and (min-width:801px) {
+  html[data-surface=workspace] .shell > aside {height:auto;position:relative;top:0}
+  .shell > aside nav {flex:none;overflow:visible}
+}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more) {
+  html[data-surface=workspace] .shell > aside,.public-nav,.landing .public-nav,.site-page .public-nav,.motion-settings,.motion-menu,html[data-surface] body .cookie-settings {
+    background:var(--glass-content);backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+  .shell .panel {border-color:var(--glass-edge)}
+}
+html[data-glass-solid=true] {--glass-tint:var(--glass-content)}
+html[data-glass-solid=true] .shell > aside,html[data-glass-solid=true] .public-nav,
+html[data-glass-solid=true] .motion-settings,html[data-glass-solid=true] .motion-menu,
+html[data-glass-solid=true] .cookie-settings {backdrop-filter:none;-webkit-backdrop-filter:none}
+@media(prefers-reduced-motion:reduce) {
+  button,.button,.public-nav a,.shell nav a {transition:none!important;transform:none!important}
+}
+html[data-motion-mode=reduced] button,html[data-motion-mode=reduced] .button,
+html[data-motion-mode=reduced] .public-nav a,html[data-motion-mode=reduced] .shell nav a {transition:none!important;transform:none!important}
