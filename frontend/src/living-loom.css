@@ -77,3 +77,6 @@
 }
 @media(prefers-reduced-motion:reduce){.loom-led *, .loom-led *::before,.loom-led *::after{scroll-behavior:auto!important}}
 html[data-motion-mode=reduced] .loom-led *{scroll-behavior:auto!important}
+
+.loom-mobile-art{display:none}
+@media(max-width:899px){.loom-mobile-art{display:block;width:100%;height:clamp(180px,54vw,300px);margin:0 0 4px}.loom-mobile-art .loom-still{max-width:100%;display:block}}
