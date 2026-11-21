@@ -1,3 +1,11 @@
+# Current hosted status — 21 November 2026
+
+The frontend is deployed at https://markloom-ochre.vercel.app/ and the FastAPI API and worker have Railway deployments. After Saturn PR #16 was merged, deployment checks for Vercel and both Railway services succeeded; 102 frontend tests, 103 backend tests and PostgreSQL integration CI checks passed. This is evidence of deployment and automated tests, **not** a complete live-account audit, AI accuracy benchmark, security certification, or SLA.
+
+The older November 15 report below describes configuration and test gaps **at that earlier date**. Its claims about hosting/worker setup should not be used as today's runtime status. Actual provider configuration, email delivery, full authenticated journeys, legal/operator details, external model precision/recall, 10-draft benchmark and five-scenario impact demonstration still require independent verification. The landing examples are explicitly illustrative.
+
+---
+
 # Latest public-site status
 
 Privacy/Terms/Contact pages, consent controls, SEO/social/favicon/crawler assets, custom 404, validation, CAPTCHA integration, anonymous analytics infrastructure, secret guards and HTTPS/CSP deployment configuration are now implemented. The original product/credential limitations below still apply. Public notices remain drafts until real operator/contact details and legal review are supplied. Analytics table is installed but no events are collected without server credentials; Turnstile requires Supabase-side enforcement configuration. TLS and real 404 HTTP status need deployment verification; no production domain/DNS or Docker runtime is available. See docs/LAUNCH_CHECKLIST.md for the current checklist.

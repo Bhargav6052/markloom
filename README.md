@@ -1,6 +1,6 @@
 # Markloom — brand governance
 
-A working development implementation with an animated 3D public site, Supabase Auth, an organization workspace, versioned evidence/content, independent approvals, and a privacy-gated analysis worker. **Public launch is blocked.** See [LIMITATIONS.md](LIMITATIONS.md) for unfinished and unverified requirements.
+**Hosted application (21 November 2026):** [Markloom on Vercel](https://markloom-ochre.vercel.app/) with a separate Railway FastAPI service and analysis worker. The approved original Saturn UI/UX was merged in [PR #16](https://github.com/Bhargav6052/markloom/pull/16). Deployment and automated checks succeeded. The system includes Supabase Auth, organization workspaces, versioned evidence/content, independent approvals, and a privacy-gated analysis worker. **Deployment success is not proof of production readiness or measured AI accuracy.** See [LIMITATIONS.md](LIMITATIONS.md).
 
 The supplied prompt was reviewed and revised in [docs/PROMPT_REVIEW.md](docs/PROMPT_REVIEW.md) and [docs/REVISED_MASTER_PROMPT.md](docs/REVISED_MASTER_PROMPT.md). Its original is preserved; the Downloads file was not edited.
 

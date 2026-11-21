@@ -21,3 +21,7 @@ No production deployment, migration, RLS change or merge is part of this integra
 - Remaining browser and Vercel verification results are recorded in `design-qa.md` after preview publication.
 
 The legacy preview tree has seven tests for an unused earlier ribbon motion module. That unused module is not imported by the current Saturn reference and was not brought into the production integration. All tests present in this integration pass.
+
+## Production rollout update — 21 November 2026
+
+This document originally described the preview-stage transfer. The source-based integration was merged in PR #16 at `391c049d1fe7bf33010f08446c70ee3cd6a97517`. Vercel and both Railway deployment checks subsequently reported success. This is not a formal measurement of authenticated end-to-end behavior or AI accuracy.
