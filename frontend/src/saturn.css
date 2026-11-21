@@ -1,0 +1,23 @@
+/* Bounded Saturn enhancement: no document layout, scroll or business behavior changes. */
+.saturn-logo{position:relative;width:100%;height:100%;touch-action:pan-y pinch-zoom;isolation:isolate}.saturn-static{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 15px 30px #a987bc35)}.saturn-logo[data-ready=true]>.saturn-static{visibility:hidden}.saturn-canvas{position:absolute;inset:0}.saturn-canvas canvas{touch-action:pan-y pinch-zoom}.saturn-canvas .saturn-static{visibility:visible}
+.reference-landing .liquid-button{position:relative;isolation:isolate;overflow:hidden;--glass-x:50%;--glass-y:15%;transition:transform .3s cubic-bezier(.2,.8,.2,1.15),box-shadow .3s,background-color .3s;transform-origin:center}.reference-landing .liquid-button:before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at var(--glass-x) var(--glass-y),#fff7,transparent 48%);opacity:.24;transition:opacity .3s}.reference-landing .liquid-button:after{content:'';position:absolute;inset:1px;pointer-events:none;border-radius:inherit;box-shadow:inset 0 1px 2px #fff8,inset 0 -2px 5px #30183e66;border-top:1px solid #e0c18b88}.reference-landing .liquid-button:is(:hover,:focus-visible):not(:disabled):not([aria-disabled=true]){transform:scale(1.04);box-shadow:inset 0 1px 4px #fff7,0 7px 24px #a987bc44,0 0 10px #e0c18b22}.reference-landing .liquid-button:hover:before{opacity:.4}.reference-landing .liquid-button:active:not(:disabled):not([aria-disabled=true]){transform:scale(.96)}.reference-landing .liquid-button:focus-visible{outline:2px solid #e0c18b;outline-offset:5px}.reference-landing .liquid-button:disabled,.reference-landing .liquid-button[aria-disabled=true]{transform:none;box-shadow:none;opacity:.55}.reference-landing .liquid-button:disabled:before,.reference-landing .liquid-button[aria-disabled=true]:before{display:none}
+html[data-motion-mode=reduced] .reference-landing .liquid-button{transition:none;transform:none!important}html[data-motion-mode=reduced] .reference-landing .liquid-button:before{display:none}
+@media(prefers-reduced-motion:reduce){.reference-landing .liquid-button{transition:none;transform:none!important}.reference-landing .liquid-button:before{display:none}}
+html[data-transparency=reduced] .reference-landing .liquid-button:before{display:none}html[data-transparency=reduced] .reference-landing .liquid-button{backdrop-filter:none}
+
+/* Champagne lighting and tactile glass, preserving the purple identity. */
+.reference-landing .liquid-header{border-top-color:#edce8c88;box-shadow:inset 0 1px 2px #fff3,0 12px 40px #0004,0 0 28px #d7a5490c}
+.reference-landing .liquid-eyebrow,.reference-landing .liquid-scroll,.reference-landing .liquid-chapter-index{color:#ebce99}
+.reference-landing .liquid-hero h1 em{color:#d1b0e8;text-shadow:0 0 26px #d5aa6120}
+.reference-landing .liquid-button{backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border-color:#d9b97588;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.reference-landing a.liquid-button.liquid-primary{background:linear-gradient(120deg,#f8e6bf 0%,#e2bafa 24%,#bc8de8 64%,#e2ba75 100%);border-color:#ffe4ad;box-shadow:inset 0 2px 6px #fff9,inset 0 -3px 5px #7e4f9266,0 0 21px #bd7cf455,0 0 12px #e0b45d38}
+.reference-landing .liquid-button:before{background:radial-gradient(circle at var(--glass-x) var(--glass-y),#fff4d6b0,transparent 55%)}
+.reference-landing .liquid-button[data-glass-pressed=true]:not(:disabled):not([aria-disabled=true]){transform:scale(.96);box-shadow:inset 0 2px 9px #5a352c55,0 0 26px #e5b95566}
+.reference-landing .liquid-button[data-glass-pressed=true]:before{opacity:.65}
+.reference-landing .liquid-header nav a,.reference-pillars a{transition:color .2s,box-shadow .2s,background-color .2s;touch-action:manipulation}
+.reference-landing .liquid-header nav a:active,.reference-pillars a:active{color:#ffe1a1;box-shadow:inset 0 0 18px #e8ba6420}
+.reference-landing .reference-pillars a{border-top-color:#e8c17eaa;background:linear-gradient(120deg,#be925c20,#9765bd32 42%,#21152ca6)}
+.reference-landing .liquid-chapter{border-top-color:#c39b5b38}
+html[data-transparency=reduced] .reference-landing a.liquid-button{background:#34243f;backdrop-filter:none;-webkit-backdrop-filter:none;color:#fff!important}
+html[data-transparency=reduced] .reference-landing a.liquid-button.liquid-primary{background:#e2c396;color:#211327!important}
+@media(prefers-reduced-transparency:reduce){.reference-landing .liquid-button{backdrop-filter:none;-webkit-backdrop-filter:none}}

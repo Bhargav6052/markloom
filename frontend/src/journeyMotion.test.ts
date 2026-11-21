@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import {journeyPose,journeyRange,type JourneyStop} from './journeyMotion';
+const stop:JourneyStop={origin:{x:500,y:400,width:320,height:240},destination:{x:100,y:1200,width:500,height:360},start:100,end:900,direction:-1};
+describe('continuous card journey',()=>{
+ it('lets visitors see the complete pile before departure after an added hero',()=>{const range=journeyRange(1530,900,0,1100);expect(range.start).toBe(1100);expect(journeyPose({...stop,...range},1000,1000).originOpacity).toBe(1);expect(range.end).toBeGreaterThanOrEqual(1220)});
+ it('hands off at exact document positions without leaving duplicate visible cards',()=>{const before=journeyPose(stop,0,0),after=journeyPose(stop,1000,1000);expect(before).toMatchObject({progress:0,x:500,y:400,opacity:0,originOpacity:1,destinationOpacity:0});expect(after).toMatchObject({progress:1,x:100,y:200,opacity:0,originOpacity:0,destinationOpacity:1,width:500,height:360})});
+ it('retraces the same pose when scrolling backward without restarting a time-based animation',()=>{const forward=[100,300,500,700,900].map(s=>journeyPose(stop,s,s));const backward=[900,700,500,300,100].map(s=>journeyPose(stop,s,s)).reverse();expect(forward).toEqual(backward)});
+ it('bounds rotation, size and opacity even after large scroll jumps',()=>{for(const scroll of [-10000,0,101,300,500,700,899,10000]){const pose=journeyPose(stop,scroll,scroll,true);expect(Math.abs(pose.rotation)).toBeLessThanOrEqual(4);expect(Math.abs(pose.tilt)).toBeLessThanOrEqual(4);expect(pose.width).toBeGreaterThanOrEqual(320);expect(pose.width).toBeLessThanOrEqual(500);expect(pose.opacity).toBeGreaterThanOrEqual(0);expect(pose.opacity).toBeLessThanOrEqual(1)}});
+ it('keeps screen coordinates aligned with native scroll while the timeline damps',()=>{const a=journeyPose(stop,500,400),b=journeyPose(stop,500,600);expect(a.x).toEqual(b.x);expect(a.y-b.y).toBe(200)});
+ it('does not overlap adjacent chapter flights on short or tall viewports',()=>{for(const height of [640,844,1000,1600]){const first=journeyRange(900,height);const next=journeyRange(1300,height,first.end);expect(next.start).toBeGreaterThan(first.end);expect(next.end-next.start).toBeGreaterThanOrEqual(120)}});
+});

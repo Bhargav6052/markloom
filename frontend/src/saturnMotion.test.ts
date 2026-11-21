@@ -1,0 +1,9 @@
+import {describe,it,expect} from 'vitest';
+import {saturnCameraDistance,saturnRest,stepSaturn} from './saturnMotion';
+describe('Saturn motion comfort and continuity',()=>{
+ it('keeps the full orbit inside tablet, mobile and desktop camera frustums',()=>{for(const aspect of [.5,.72,1.1,2]){const distance=saturnCameraDistance(aspect*1000,1000),visibleWidth=2*distance*Math.tan(43/2*Math.PI/180)*aspect;expect(visibleWidth).toBeGreaterThan(4.6);expect(distance).toBeGreaterThanOrEqual(6.1)}});
+ it('completes one idle revolution in 30 seconds, independently of the slower orbit',()=>{let pose={...saturnRest};for(let i=0;i<3000;i++)pose=stepSaturn(pose,.01,{x:0,y:0,idleMs:1000});expect(pose.spin).toBeCloseTo(Math.PI*2,8);expect(pose.orbit).toBeCloseTo(Math.PI*2*30/50,8)});
+ it('resumes after 700ms without resetting accumulated orientation',()=>{let pose={...saturnRest,spin:4,idleWeight:0};expect(stepSaturn(pose,.02,{x:1,y:0,idleMs:699}).spin).toBe(4);pose=stepSaturn(pose,.02,{x:1,y:0,idleMs:700});expect(pose.spin).toBeGreaterThan(4);expect(pose.spin).toBeLessThan(4.001)});
+ it('bounds aggressive pointer input and parallax without abrupt rotation',()=>{let pose={...saturnRest};for(let i=0;i<1000;i++)pose=stepSaturn(pose,.016,{x:100,y:-100,idleMs:0});expect(Math.abs(pose.x)).toBeLessThanOrEqual(.065);expect(Math.abs(pose.y)).toBeLessThanOrEqual(.065);expect(Math.abs(pose.z)).toBeLessThanOrEqual(.018);expect(Math.abs(pose.shiftX)).toBeLessThanOrEqual(.055)});
+ it('caps frame jumps, ignores negative time, and has a static reduced-motion state',()=>{expect(stepSaturn(saturnRest,10,{x:0,y:0,idleMs:1000}).spin).toBeCloseTo(Math.PI*2/30*.05);expect(stepSaturn(saturnRest,-1,{x:1,y:1,idleMs:0})).toEqual(saturnRest);expect(stepSaturn({...saturnRest,spin:9},.01,{x:1,y:1,idleMs:0},true)).toEqual(saturnRest)});
+});

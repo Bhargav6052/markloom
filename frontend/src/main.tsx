@@ -15,3 +15,15 @@ import './comfort.css';
 createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><MotionProvider><App/></MotionProvider></BrowserRouter></React.StrictMode>);
 
 import "./theme.css";
+
+import './liquid.css';
+
+import './heritage.css';
+
+import "./sculpture.css";
+
+import "./reference.css";
+
+import "./saturn.css";
+
+import "./cinematicBrand.css";
