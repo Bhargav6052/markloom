@@ -1,0 +1,53 @@
+/* Final approved Saturn reference – landing-page-only styles, no API or workspace changes. */
+.saturn-led{--saturn-purple:#b38add;--saturn-gold:#e9bf7d;--saturn-ink:#100b19;background:#100b19!important;color:#f7f2ff}
+.saturn-led .site-atmosphere{opacity:.17;pointer-events:none}
+.saturn-led .public-nav{position:relative;z-index:9;max-width:1600px;width:calc(100% - 36px);margin:13px auto 0;padding:11px clamp(16px,2vw,32px);border-radius:28px;border:1px solid #d1b0e788;background:linear-gradient(135deg,#46334cbf 0%,#1c1524e9 48%,#2d1b3ec9 100%);box-shadow:inset 0 1px 2px #fff4,0 7px 28px #0009;backdrop-filter:blur(22px) saturate(140%)}
+.saturn-led .public-nav .wordmark{font-weight:650;letter-spacing:-.058em;font-size:clamp(1.2rem,2vw,1.8rem)}
+.saturn-led .public-nav .nav-signin{border:1px solid #b697c888;background:#2c20399c;border-radius:999px;box-shadow:inset 0 1px #fff3;padding:13px 19px}
+.saturn-led .public-nav .public-links a{border:1px solid transparent;border-radius:999px;padding:11px 15px;transition:background .2s}
+.saturn-led .public-nav .public-links a:hover{background:#b58ad329}
+.saturn-hero{--mx:0;--my:0;position:relative;isolation:isolate;min-height:clamp(670px,calc(100svh - 88px),1040px);overflow:hidden;background:#100b19;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:center;padding:clamp(155px,19vw,245px) clamp(28px,5vw,95px) 176px;gap:6px}
+.saturn-hero-word{position:absolute;top:-.085em;left:-.03em;width:104%;font-size:clamp(8rem,24.2vw,31rem);font-weight:760;line-height:.94;letter-spacing:-.092em;white-space:nowrap;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:linear-gradient(165deg,#9d79b4 0%,#5a4270 39%,#2c223a 79%,#1a1525 100%);background-clip:text;-webkit-background-clip:text;color:transparent;opacity:.68;pointer-events:none;z-index:-1}
+.saturn-hero-lights{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 46%,#5d287fa8,transparent 38%),radial-gradient(ellipse at 74% 78%,#8c5aa157,transparent 28%),radial-gradient(ellipse at 94% 5%,#e3ac6331,transparent 22%);pointer-events:none;z-index:-1}
+.saturn-copy{position:relative;z-index:2;align-self:center;padding-bottom:30px;min-width:0}
+.saturn-eyebrow{color:#e6cffa;font-size:clamp(.7rem,.9vw,.92rem);letter-spacing:.19em;font-weight:600;margin:0 0 25px;white-space:nowrap}
+.saturn-hero h1{font-size:clamp(3.35rem,6.35vw,7.3rem);line-height:.95;letter-spacing:-.067em;font-weight:450;color:#fff9ff;margin:0 0 27px}
+.saturn-hero h1 em{font-style:normal;color:#c297ef}
+.saturn-description{color:#e1d3eb;font-size:clamp(1.03rem,1.35vw,1.4rem);line-height:1.6;max-width:35ch}
+.saturn-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:35px}
+.saturn-led .saturn-glass-button{--px:50%;--py:20%;position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:15px;padding:14px 22px;min-height:50px;border-radius:999px;text-decoration:none;color:#fcf5ff;background:linear-gradient(150deg,#5a3b72cf,#282035d9);border:1px solid #c7a4d6a3;box-shadow:inset 0 2px 2px #fff5,inset 0 -2px 7px #d3a9f529,0 7px 22px #0009;font-weight:560;font-size:clamp(.84rem,.92vw,1rem);transition:transform .23s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s;overflow:hidden}
+.saturn-led .saturn-glass-button:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--px) var(--py),#fff8,transparent 40%);opacity:.24;pointer-events:none;z-index:-1;transition:opacity .2s}
+.saturn-led .saturn-glass-button:hover{transform:translateY(-3px) scale(1.035);filter:brightness(1.12);box-shadow:inset 0 2px 2px #fff8,0 0 24px #c293e568,0 9px 30px #0009}
+.saturn-led .saturn-glass-button:active{transform:scale(.96)}
+.saturn-led .saturn-glass-button:focus-visible{outline:3px solid #f4d69f;outline-offset:4px}
+.saturn-led .saturn-glass-button.saturn-cta{color:#211129;font-weight:660;border-color:#fff0ff;background:linear-gradient(150deg,#f9e4ff,#c88ee9 47%,#e8b77a 92%,#f9dfaa);box-shadow:inset 0 2px 3px #fffc,inset 0 -2px 4px #fffc,0 0 17px #c18afca6,0 7px 29px #924ec66c}
+.saturn-art{position:relative;z-index:2;justify-self:stretch;height:clamp(370px,44vw,690px);min-width:0;pointer-events:none;transform:translateY(7%)}
+.saturn-webgl,.saturn-m-static{position:absolute;inset:0}
+.saturn-webgl canvas{width:100%;height:100%;display:block;touch-action:pan-y}
+.saturn-m-static{display:grid;place-items:center;filter:drop-shadow(0 0 18px #c393ff88)}
+.saturn-m-static svg{width:90%;height:70%}
+.saturn-webgl.is-rendered+.saturn-floor-reflection{opacity:1}
+.saturn-art:has(.saturn-webgl.is-rendered) .saturn-m-static{visibility:hidden}
+.saturn-static-orbit{position:absolute;left:0;right:0;top:39%;height:33%;border:7px solid #eac185d9;border-left-color:#c89cffa8;border-bottom-color:#9b5beec7;border-radius:50%;transform:rotate(-21deg);box-shadow:0 0 20px #c49fff96,inset 0 0 20px #a65fe688}
+.saturn-light-halo{position:absolute;inset:3%;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,#b663e644,transparent 66%);filter:blur(18px)}
+.saturn-floor-reflection{position:absolute;bottom:-7%;left:12%;right:12%;height:16%;background:radial-gradient(ellipse at center,#f0c585a4,transparent 33%),radial-gradient(ellipse at center,#945be3ab,transparent 70%);filter:blur(12px);opacity:.7}
+.saturn-callout{position:absolute;right:0;color:#fff2ff;background:#2d223bd9;border:1px solid #d7b7e08c;border-radius:17px;font-size:.75rem;padding:8px 14px;line-height:1.32;box-shadow:inset 0 1px 1px #fff4}
+.saturn-pointer{top:26%}.saturn-idle{top:71%}
+.saturn-callout:before{content:'';position:absolute;right:100%;top:50%;width:25px;height:1px;background:#ecc689}
+.saturn-angle{position:absolute;bottom:3%;left:35%;right:35%;text-align:center;color:#f1c589;font-weight:600;letter-spacing:.2em;white-space:nowrap}
+.saturn-angle span{margin:0 15px;letter-spacing:.05em}
+.saturn-scroll-cue{position:absolute;bottom:113px;left:50%;transform:translateX(-50%);display:flex;align-items:center;flex-direction:column;gap:4px;text-decoration:none;color:#d3c1dd;letter-spacing:.18em;font-size:.7rem;z-index:4;white-space:nowrap}
+.saturn-scroll-cue span{font-size:1.8rem;color:#eecb89}
+.saturn-features{position:absolute;left:clamp(22px,5vw,90px);right:clamp(22px,5vw,90px);bottom:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;z-index:4}
+.saturn-led .saturn-features a{min-height:79px;display:flex;align-items:center;justify-content:center;gap:15px;text-decoration:none;color:#f9f2ff;background:linear-gradient(155deg,#493059d6,#22172cd9);border:1px solid #b48bbf93;border-radius:34px 34px 20px 20px;box-shadow:inset 0 2px 2px #f7d8ff65,0 -3px 19px #ca89e735;transition:transform .23s}
+.saturn-led .saturn-features a:hover{transform:translateY(-3px)}
+.saturn-features a span{color:#eac488;font-size:.75rem}
+.saturn-optics{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.saturn-wave-a,.saturn-wave-b{position:absolute;width:62%;height:27%;border-radius:50%;background:linear-gradient(164deg,transparent,#9e70ce40 39%,#f8dcff95 48%,#e6ad7e7a 51%,#6b429a55 56%,transparent 76%);transform:rotate(-18deg);filter:drop-shadow(0 0 10px #a56fd86a)}
+.saturn-wave-a{top:-16%;left:-12%}.saturn-wave-b{right:-23%;bottom:-10%;transform:rotate(-25deg)}
+.saturn-floor{position:absolute;left:-2%;right:-2%;bottom:1%;height:31%;background:linear-gradient(transparent 0%,#905ba51f 30%,#c08de04d 55%,#1b122a5e 67%,transparent 100%);opacity:.57}
+.saturn-led .pile-story{position:relative;background:#100b19}
+@media(max-width:1100px){.saturn-hero{padding-left:36px;padding-right:36px}.saturn-art{height:clamp(360px,46vw,550px)}.saturn-hero h1{font-size:clamp(3rem,6vw,5.5rem)}.saturn-callout{display:none}}
+@media(max-width:849px){.saturn-led .public-nav{width:calc(100% - 20px);padding:12px}.saturn-hero{display:flex;flex-direction:column;padding:110px 22px 188px;gap:0;min-height:auto}.saturn-hero-word{top:0;font-size:22vw}.saturn-copy{order:1;width:100%;padding-bottom:0}.saturn-art{order:0;align-self:stretch;transform:none;width:100%;height:clamp(250px,61vw,390px)}.saturn-hero h1{font-size:clamp(2.8rem,9.5vw,5.3rem)}.saturn-eyebrow{font-size:.68rem;white-space:normal}.saturn-description{font-size:1rem}.saturn-actions{gap:9px;margin-top:22px}.saturn-led .saturn-glass-button{font-size:.8rem;padding:11px 15px;min-height:46px}.saturn-hero .saturn-scroll-cue{bottom:140px}.saturn-features{grid-template-columns:1fr;gap:6px;bottom:12px}.saturn-led .saturn-features a{min-height:38px;border-radius:14px}.saturn-angle{bottom:1%;font-size:.72rem}}
+@media(prefers-reduced-motion:reduce){.saturn-led .saturn-glass-button,.saturn-led .saturn-features a{transition:none;transform:none!important}}
+html[data-motion-mode=reduced] .saturn-led .saturn-glass-button,html[data-motion-mode=reduced] .saturn-led .saturn-features a{transition:none;transform:none!important}

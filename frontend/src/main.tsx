@@ -15,3 +15,4 @@ import './comfort.css';
 createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><MotionProvider><App/></MotionProvider></BrowserRouter></React.StrictMode>);
 
 import "./theme.css";
+import "./saturn.css";
