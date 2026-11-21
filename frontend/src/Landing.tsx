@@ -7,6 +7,7 @@ import BackToTop from './BackToTop';
 import {cinematicScroll} from './cinematicScroll';
 import EvidenceStory from './EvidenceStory';
 import WorkflowChapters from './WorkflowChapters';
+import SaturnHero from './SaturnHero';
 import {useMotionSettings} from './MotionSettings';
 import type {SceneMotion} from './sceneState';
 export function Shield(){return <svg width="18" height="20" viewBox="0 0 24 26" fill="none" aria-hidden="true"><path d="M12 2 22 6v7c0 5-5 9-10 11C7 22 2 18 2 13V6l10-4Z" stroke="currentColor" strokeWidth="1.6"/><path d="m7 13 3 3 7-7" stroke="currentColor" strokeWidth="1.6"/></svg>}
@@ -19,16 +20,13 @@ export default function Landing(){
  useEffect(()=>{if(hash==='#product-tour'){navigate({hash:'#source'},{replace:true,preventScrollReset:true});cinematicScroll('source');return}const index=experienceSlides.findIndex(s=>'#'+s.id===hash);if(index<0)return;setShowExperience(true);setSlide(index);const frame=requestAnimationFrame(()=>cinematicScroll('experience'));return()=>cancelAnimationFrame(frame)},[hash]);
  const openSlide=(index:number,dir=index>=slide?1:-1)=>{if(index===2){navigate({hash:'#source'},{preventScrollReset:true});cinematicScroll('source');return}setShowExperience(true);setDirection(dir);setSlide(index);const next='#'+experienceSlides[index].id;if(hash!==next)navigate({hash:next},{preventScrollReset:true});else cinematicScroll('experience')};
  const cta=()=>void trackPublicEvent('cta_click','/');
- return <div ref={root} className="landing cinematic video-led flow-led refined-led pile-led journey-led" data-motion={animated?'enabled':'static'} data-interface-motion={reduced?'static':'enabled'} data-motion-mode={effective}>
+ return <div ref={root} className="landing cinematic video-led flow-led refined-led pile-led journey-led saturn-led" data-motion={animated?'enabled':'static'} data-interface-motion={reduced?'static':'enabled'} data-motion-mode={effective}>
   <div className="site-atmosphere" aria-hidden="true"><div className="ambient-beam"/><div className="ambient-floor"/><div className="ambient-pool"/></div>
   <a className="skip-link" href="#main-content">Skip to content</a>
   <nav className="public-nav" aria-label="Public navigation"><Link className="wordmark" to="/" aria-label="Markloom home">markloom<span className="brand-mark" aria-hidden="true"/></Link><div className="public-links">{[['/how-it-works','How it works'],['/our-principles','Our principles'],['/product-tour','Product tour']].map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</div><Link className="nav-signin" to="/login">Sign in <span aria-hidden="true">↗</span></Link></nav>
   <main id="main-content" className="public-main">
+   <SaturnHero onCreate={cta}/>
    <div className="pile-story"><div className="pile-visual-rail"><div className="pile-sticky-stage"><FlowNavigation animated={!reduced}/></div></div>
-   <section className="hero" aria-labelledby="hero-title">
-    <div className="hero-copy"><p className="kicker hero-eyebrow">BRAND KNOWLEDGE. IN CONTEXT.</p><h1 id="hero-title"><span className="hero-line"><span>Proof behind</span></span><span className="hero-line accent-line"><span>every idea.</span></span></h1><p className="hero-subcopy">From approved knowledge to confident decisions.</p><div className="hero-actions"><Link className="primary-link" to="/signup" onClick={cta}>Create your workspace <span aria-hidden="true">↗</span></Link></div></div>
-    <div className="hero-bottom"><a href="#source" className="scroll-cue"><span className="scroll-line" aria-hidden="true"/>Scroll to explore</a></div>
-   </section>
    <WorkflowChapters/>
    </div>
    <div className="experience-slot">{showExperience&&<ExperienceDeck active={slide} direction={direction} onChange={openSlide} animated={!reduced}/>}</div>
