@@ -204,9 +204,12 @@ def retrieve(text: str, sources: list[dict], max_chars: int = 40000) -> list[dic
     tokens = set(re.findall(r"\w+", text.casefold()))
     ranked = sorted(
         sources,
+        # Relevance comes first; the previous non-fact-first ordering
+        # could omit approved facts when unrelated rules filled the context.
+        # Deterministic checks still use the full source snapshot.
         key=lambda s: (
-            s["rule_type"] != "fact",
             len(tokens & set(re.findall(r"\w+", s["body"].casefold()))),
+            s["rule_type"] == "fact",
         ),
         reverse=True,
     )
