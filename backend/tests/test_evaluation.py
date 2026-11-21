@@ -58,7 +58,7 @@ def test_retrieve_prefers_matching_fact_when_relevance_ties():
 
     text = "Demo camera is available."
     fact = {"id": "fact", "rule_type": "fact", "body": "Demo camera has a warranty."}
-    tone = {"id": "tone", "rule_type": "tone", "body": "Demo camera voice is clear."}
+    tone = {"id": "tone", "rule_type": "tone", "body": "Demo camera voice should be warm."}
     assert [s["id"] for s in retrieve(text, [tone, fact])][:2] == [
         "fact", "tone",
     ]
